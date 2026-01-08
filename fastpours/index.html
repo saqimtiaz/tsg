@@ -59,6 +59,8 @@ let pointers=new Map();
 let pinchStartDistance=null, scaleStart=1, offsetStartX=0, offsetStartY=0;
 let pinchMidX=0, pinchMidY=0;
 let pinching=false;
+let launchedFromShare = false;
+
 
 /* ================= RESIZE ================= */
 function resizeCanvas(){
@@ -172,6 +174,7 @@ function loadTemplateFromStorage(){const data=localStorage.getItem("templateData
 
 /* ================= FIRST-TAP PICKER FIX ================= */
 function promptTemplateOrImage(cx,cy){
+	if(launchedFromShare && photoImg) return false;
 	// Ensure picker call happens after the tap is fully processed
 	if(!templateImg){
 		setTimeout(()=>pickFile((img,name)=>{
@@ -290,6 +293,10 @@ document.getElementById("exportBtn").onclick=()=>{
 
 /* ================= INIT ================= */
 window.addEventListener("load",()=>{
+	if("serviceWorker" in navigator){
+		navigator.serviceWorker.register("/sw.js");
+	}
+
 	loadTemplateFromStorage();
 	resizeCanvas();
 
@@ -298,6 +305,7 @@ window.addEventListener("load",()=>{
 		window.launchQueue.setConsumer(launchParams=>{
 			if(!launchParams.files || launchParams.files.length===0) return;
 			const fileHandle = launchParams.files[0];
+			launchedFromShare = true;
 			fileHandle.getFile().then(file=>{
 				loadImage(file, img=>{
 					photoImg = img;
