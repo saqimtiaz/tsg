@@ -11,6 +11,7 @@ self.addEventListener('fetch', event => {
 	// sw.js
 	if (event.request.method === 'POST' && event.request.url.includes('/tsg/fastpours/index.html')) {
 		event.respondWith((async () => {
+			const allClients = await self.clients.matchAll({ type: 'window', includeUncontrolled: true });
 			allClients.forEach(client => {
 				client.postMessage({ type: 'sw-log', message: 'Received share POST' });
 			});
@@ -23,7 +24,7 @@ self.addEventListener('fetch', event => {
 				console.log('SW: Shared files', files);
 
 				// Send files to the page
-				const allClients = await self.clients.matchAll({ type: 'window', includeUncontrolled: true });
+
 				allClients.forEach(client => {
 					client.postMessage({ type: 'shared-files', files: files.map(f => ({ name: f.name, blob: f })) });
 				});
