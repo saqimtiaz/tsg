@@ -141,12 +141,31 @@ function draw(){
 		// Draw dotted outline if photo doesn't fully cover BOX
 		if(!fullyCoversBox){
 			ctx.save();
-			ctx.strokeStyle = "white";
+
+			const isMobile = window.matchMedia("(pointer: coarse)").matches;
+			const lineWidth = isMobile ? 4 : 2;
+			const inset = isMobile ? 2 : 1;
+
 			ctx.setLineDash([4,4]);
-			ctx.lineWidth = 2;
+			ctx.lineWidth = lineWidth;
+
+			// Outer dark stroke
+			ctx.strokeStyle = "rgba(0,0,0,0.8)";
 			ctx.strokeRect(BOX.x, BOX.y, BOX.width, BOX.height);
+
+			// Inner light stroke
+			ctx.strokeStyle = "rgba(255,255,255,0.9)";
+			ctx.strokeRect(
+				BOX.x + inset,
+				BOX.y + inset,
+				BOX.width - inset * 2,
+				BOX.height - inset * 2
+			);
+
 			ctx.restore();
 		}
+
+
 	} else {
 		// No photo yet, draw outline
 		ctx.save();
