@@ -300,38 +300,18 @@ window.addEventListener("load",()=>{
 	loadTemplateFromStorage();
 	resizeCanvas();
 });
-// Handle Android share-targets
-console.log('launchQueue' in window ? 'Launch Queue supported' : 'Launch Queue NOT supported');
+navigator.serviceWorker.addEventListener("message", event => {
+  if (event.data?.type === "shared-file") {
+    const file = event.data.file;
+    loadImage(file, img => {
+      photoImg = img;
+      photoFilename = file.name;
+      resetPhoto();
+      draw();
+    });
+  }
+});
 
-if ('launchQueue' in window) {
-	window.launchQueue.setConsumer(launchParams => {
-		alert("Launch Queue triggered");
-		console.log("Launch Queue triggered", launchParams);
-
-		if (!launchParams.files || launchParams.files.length === 0) {
-			console.log("No files received in launchParams");
-			return;
-		}
-
-		const fileHandle = launchParams.files[0];
-		console.log("Received fileHandle:", fileHandle);
-
-		fileHandle.getFile()
-			.then(file => {
-				console.log("Got file from handle:", file);
-				loadImage(file, img => {
-					console.log("Image loaded from shared file");
-					photoImg = img;
-					photoFilename = file.name;
-					resetPhoto();
-					draw();
-				});
-			})
-			.catch(err => {
-				console.error("Failed to get file from handle", err);
-			});
-	});
-}
 
 </script>
 </body>
