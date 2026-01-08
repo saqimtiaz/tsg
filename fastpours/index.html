@@ -291,36 +291,57 @@ document.getElementById("exportBtn").onclick=()=>{
 	link.click();
 };
 
+
+/*** **/
+// IndexedDB helper
+async function getSharedFiles() {
+	const db = await new Promise((resolve, reject) => {
+		const request = indexedDB.open('fastpours-shared', 1);
+		request.onupgradeneeded = e => resolve(e.target.result);
+		request.onsuccess = e => resolve(e.target.result);
+		request.onerror = e => reject(e.target.error);
+	});
+	return new Promise((resolve, reject) => {
+		const tx = db.transaction('files', 'readwrite');
+		const store = tx.objectStore('files');
+		const getAllReq = store.getAll();
+		getAllReq.onsuccess = () => {
+			resolve(getAllReq.result || []);
+			// Clear after reading
+			getAllReq.result?.forEach(item => store.delete(item.id));
+		};
+		getAllReq.onerror = e => reject(e);
+	});
+}
+
+// Load shared image if present
+async function loadSharedImage() {
+	const sharedFiles = await getSharedFiles();
+	if (!sharedFiles || !sharedFiles.length) return;
+
+	const f = sharedFiles[0];
+	const blob = new Blob([f.buffer], { type: f.type });
+	loadImage(blob, img => {
+		photoImg = img;
+		photoFilename = f.name;
+		resetPhoto();
+		draw();
+	});
+}
+
+
+
 /* ================= INIT ================= */
-window.addEventListener("load",()=>{
+window.addEventListener("load", async () => {
 	loadTemplateFromStorage();
 	resizeCanvas();
+	await loadSharedImage(); // <-- loads image immediately if app launched via share
 });
+
 if ("serviceWorker" in navigator) {
 	navigator.serviceWorker.register("/tsg/fastpours/sw.js")
 		.then(() => console.log("SW registered"))
 		.catch(err => console.error("SW registration failed", err));
-}
-
-// Receive shared files from service worker
-if (navigator.serviceWorker) {
-	navigator.serviceWorker.addEventListener('message', e => {
-		const data = e.data;
-		if (data?.type === 'sw-log') {
-			console.log('SW says:', data.message);
-		}
-		if (data?.type === 'shared-files' && data.files?.length) {
-			console.log('Page: Received shared files from SW', data.files);
-			const f = data.files[0];
-			const blob = new Blob([f.buffer], { type: f.type });
-			loadImage(blob, img => {
-				photoImg = img;
-				photoFilename = f.name;
-				resetPhoto();
-				draw();
-			});
-		}
-	});
 }
 
 
