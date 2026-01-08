@@ -303,6 +303,7 @@ window.addEventListener("load",()=>{
 // Handle Android share-targets
 if ('launchQueue' in window) {
 	window.launchQueue.setConsumer(launchParams => {
+		alert("Launch Queue triggered");
 		console.log("Launch Queue triggered", launchParams);
 
 		if (!launchParams.files || launchParams.files.length === 0) {
