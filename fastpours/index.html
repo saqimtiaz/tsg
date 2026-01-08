@@ -299,24 +299,23 @@ window.addEventListener("load",()=>{
 
 	loadTemplateFromStorage();
 	resizeCanvas();
-
-	// Handle Android share-targets
-	if('launchQueue' in window){
-		window.launchQueue.setConsumer(launchParams=>{
-			if(!launchParams.files || launchParams.files.length===0) return;
-			const fileHandle = launchParams.files[0];
-			launchedFromShare = true;
-			fileHandle.getFile().then(file=>{
-				loadImage(file, img=>{
-					photoImg = img;
-					photoFilename = file.name;
-					resetPhoto();
-					draw();
-				});
+});
+// Handle Android share-targets
+if('launchQueue' in window){
+	window.launchQueue.setConsumer(launchParams=>{
+		if(!launchParams.files || launchParams.files.length===0) return;
+		const fileHandle = launchParams.files[0];
+		launchedFromShare = true;
+		fileHandle.getFile().then(file=>{
+			loadImage(file, img=>{
+				photoImg = img;
+				photoFilename = file.name;
+				resetPhoto();
+				draw();
 			});
 		});
-	}
-});
+	});
+}
 </script>
 </body>
 </html>
