@@ -293,26 +293,39 @@ document.getElementById("exportBtn").onclick=()=>{
 
 
 /*** **/
-// IndexedDB helper
-async function getSharedFiles() {
-	const db = await new Promise((resolve, reject) => {
-		const request = indexedDB.open('fastpours-shared', 1);
-		request.onupgradeneeded = e => resolve(e.target.result);
+function openSharedDB() {
+	return new Promise((resolve, reject) => {
+		const request = indexedDB.open('fastpours-shared', 2); // SAME version
+
+		request.onupgradeneeded = e => {
+			const db = e.target.result;
+			if (!db.objectStoreNames.contains('files')) {
+				db.createObjectStore('files', { keyPath: 'id', autoIncrement: true });
+			}
+		};
+
 		request.onsuccess = e => resolve(e.target.result);
 		request.onerror = e => reject(e.target.error);
 	});
+}
+
+async function getSharedFiles() {
+	const db = await openSharedDB();
+
 	return new Promise((resolve, reject) => {
 		const tx = db.transaction('files', 'readwrite');
 		const store = tx.objectStore('files');
-		const getAllReq = store.getAll();
-		getAllReq.onsuccess = () => {
-			resolve(getAllReq.result || []);
-			// Clear after reading
-			getAllReq.result?.forEach(item => store.delete(item.id));
+
+		const req = store.getAll();
+		req.onsuccess = () => {
+			const items = req.result || [];
+			items.forEach(item => store.delete(item.id)); // clear after read
+			resolve(items);
 		};
-		getAllReq.onerror = e => reject(e);
+		req.onerror = e => reject(e.target.error);
 	});
 }
+
 
 // Load shared image if present
 async function loadSharedImage() {
