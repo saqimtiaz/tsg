@@ -301,6 +301,8 @@ window.addEventListener("load",()=>{
 	resizeCanvas();
 });
 // Handle Android share-targets
+console.log('launchQueue' in window ? 'Launch Queue supported' : 'Launch Queue NOT supported');
+
 if ('launchQueue' in window) {
 	window.launchQueue.setConsumer(launchParams => {
 		alert("Launch Queue triggered");
