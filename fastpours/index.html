@@ -294,8 +294,7 @@ document.getElementById("exportBtn").onclick=()=>{
 /* ================= INIT ================= */
 window.addEventListener("load",()=>{
 	if("serviceWorker" in navigator){
-		navigator.serviceWorker.register("/tsg/fastpours/sw.js
-");
+		navigator.serviceWorker.register("/tsg/fastpours/sw.js");
 	}
 
 	loadTemplateFromStorage();
