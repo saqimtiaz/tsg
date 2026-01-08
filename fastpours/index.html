@@ -12,7 +12,48 @@ html, body { margin:0; padding:0; height:100%; background:#111; color:#fff; font
 #canvasWrap { flex:1; display:flex; align-items:center; justify-content:center; }
 canvas { display:block; background:#000; touch-action:none; }
 #controls { padding:10px; text-align:center; }
-button { font-size:16px; padding:8px 16px; }
+button {
+	appearance: none;
+	-webkit-appearance: none;
+	border: none;
+	border-radius: 14px;
+	padding: 12px 22px;
+	font-size: 15px;
+	font-weight: 600;
+	letter-spacing: 0.2px;
+	color: #fff;
+	background: linear-gradient(180deg, #2a2a2a, #181818);
+	box-shadow:
+		0 1px 0 rgba(255,255,255,0.08) inset,
+		0 6px 18px rgba(0,0,0,0.45);
+	cursor: pointer;
+	transition:
+		transform 0.08s ease,
+		box-shadow 0.08s ease,
+		background 0.15s ease;
+}
+
+button:hover {
+	background: linear-gradient(180deg, #333, #1e1e1e);
+}
+
+button:active {
+	transform: translateY(1px);
+	box-shadow:
+		0 1px 0 rgba(255,255,255,0.05) inset,
+		0 3px 10px rgba(0,0,0,0.5);
+}
+
+button:focus-visible {
+	outline: none;
+	box-shadow:
+		0 0 0 3px rgba(255,255,255,0.15),
+		0 6px 18px rgba(0,0,0,0.45);
+}
+#exportBtn {
+	min-width: 180px;
+}
+
 </style>
 </head>
 <body>
@@ -21,7 +62,7 @@ button { font-size:16px; padding:8px 16px; }
 		<canvas id="canvas"></canvas>
 	</div>
 	<div id="controls">
-		<button id="exportBtn">Export PNG</button>
+		<button id="exportBtn">Export</button>
 	</div>
 </div>
 <script>
@@ -305,7 +346,7 @@ document.getElementById("exportBtn").onclick=()=>{
 	const now=new Date();
 	const timestamp=now.toISOString().replace(/[:.]/g,"-");
 	const prefix=photoFilename?photoFilename.replace(/\.[^/.]+$/,"")+"_":"";
-	link.download=`${prefix}${timestamp}.png`;
+	link.download=`fastpours-${prefix}${timestamp}.png`;
 	link.href=canvas.toDataURL("image/png");
 	link.click();
 };
