@@ -293,24 +293,32 @@ document.getElementById("exportBtn").onclick=()=>{
 
 /* ================= INIT ================= */
 window.addEventListener("load",()=>{
-	if("serviceWorker" in navigator){
-		navigator.serviceWorker.register("/tsg/fastpours/sw.js");
-	}
-
 	loadTemplateFromStorage();
 	resizeCanvas();
 });
-navigator.serviceWorker.addEventListener("message", event => {
-  if (event.data?.type === "shared-file") {
-    const file = event.data.file;
-    loadImage(file, img => {
-      photoImg = img;
-      photoFilename = file.name;
-      resetPhoto();
-      draw();
-    });
-  }
-});
+if ("serviceWorker" in navigator) {
+	navigator.serviceWorker.register("/tsg/fastpours/sw.js")
+		.then(() => console.log("SW registered"))
+		.catch(err => console.error("SW registration failed", err));
+}
+
+// Receive shared files from service worker
+if (navigator.serviceWorker) {
+	navigator.serviceWorker.addEventListener('message', e => {
+		const data = e.data;
+		if (data?.type === 'shared-files' && data.files?.length) {
+			console.log('Page: Received shared files from SW', data.files);
+			const file = data.files[0].blob; // take first file
+			loadImage(file, img => {
+				photoImg = img;
+				photoFilename = data.files[0].name;
+				resetPhoto();
+				draw();
+			});
+		}
+	});
+}
+
 
 
 </script>

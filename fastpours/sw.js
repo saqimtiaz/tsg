@@ -1,25 +1,36 @@
-// sw.js
-self.addEventListener("fetch", event => {
-  const url = new URL(event.request.url);
-  if (event.request.method !== "POST" || !url.pathname.endsWith("/index.html")) {
-    // ignore other requests
-    return;
-  }
+self.addEventListener('install', event => {
+	self.skipWaiting();
+});
 
-  event.respondWith((async () => {
-    const formData = await event.request.formData();
-    const files = formData.getAll("photo"); // match your manifest 'name'
+self.addEventListener('activate', event => {
+	event.waitUntil(self.clients.claim());
+});
 
-    // Send files to the PWA window if it exists
-    const allClients = await clients.matchAll({ type: "window" });
-    if (allClients.length > 0) {
-      const client = allClients[0];
-      files.forEach(file => {
-        client.postMessage({ type: "shared-file", file });
-      });
-    }
+// Intercept share POSTs
+self.addEventListener('fetch', event => {
+	if (event.request.method === 'POST' && event.request.url.includes('/tsg/fastpours/index.html')) {
+		event.respondWith((async () => {
+			console.log('SW: Received a share POST', event.request.url);
 
-    // Redirect back to your app
-    return Response.redirect("/tsg/fastpours/index.html", 303);
-  })());
+			try {
+				const formData = await event.request.formData();
+				const files = formData.getAll('photo'); // matches manifest
+
+				console.log('SW: Shared files', files);
+
+				// Send files to the page
+				const allClients = await self.clients.matchAll({ type: 'window', includeUncontrolled: true });
+				allClients.forEach(client => {
+					client.postMessage({ type: 'shared-files', files: files.map(f => ({ name: f.name, blob: f })) });
+				});
+
+				// Redirect to main app page
+				return Response.redirect('/tsg/fastpours/', 303);
+
+			} catch (err) {
+				console.error('SW: Error handling share POST', err);
+				return Response.redirect('/tsg/fastpours/', 303);
+			}
+		})());
+	}
 });
