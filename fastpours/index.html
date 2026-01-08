@@ -342,11 +342,24 @@ async function loadSharedImage() {
 	});
 }
 
+function loadDefaultTemplateIfNeeded() {
+	if (localStorage.getItem("templateData")) return;
+
+	const img = new Image();
+	img.onload = () => {
+		templateImg = img;
+		templateData = imgToBase64(img);
+		localStorage.setItem("templateData", templateData);
+		draw();
+	};
+	img.src = "default-template.png";
+}
 
 
 /* ================= INIT ================= */
 window.addEventListener("load", async () => {
 	loadTemplateFromStorage();
+	loadDefaultTemplateIfNeeded();
 	resizeCanvas();
 	await loadSharedImage(); // <-- loads image immediately if app launched via share
 });
