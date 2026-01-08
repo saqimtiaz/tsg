@@ -7,8 +7,17 @@ self.addEventListener('activate', event => {
 	event.waitUntil(self.clients.claim());
 });
 
-// Utility: store file in IndexedDB
+// Utility: store file in IndexedDB safely
 async function storeSharedFile(file) {
+	// Read the file into an ArrayBuffer first
+	const buffer = await new Promise((resolve, reject) => {
+		const reader = new FileReader();
+		reader.onload = () => resolve(reader.result);
+		reader.onerror = e => reject(e);
+		reader.readAsArrayBuffer(file);
+	});
+
+	// Open IndexedDB and store
 	const db = await new Promise((resolve, reject) => {
 		const request = indexedDB.open('fastpours-shared', 1);
 		request.onupgradeneeded = e => {
@@ -20,20 +29,16 @@ async function storeSharedFile(file) {
 		request.onsuccess = e => resolve(e.target.result);
 		request.onerror = e => reject(e.target.error);
 	});
-	return new Promise((resolve, reject) => {
+
+	await new Promise((resolve, reject) => {
 		const tx = db.transaction('files', 'readwrite');
 		const store = tx.objectStore('files');
-		const reader = new FileReader();
-		reader.onload = () => {
-			const fileData = {
-				name: file.name,
-				type: file.type,
-				buffer: reader.result
-			};
-			store.add(fileData).onsuccess = () => resolve();
-		};
-		reader.onerror = e => reject(e);
-		reader.readAsArrayBuffer(file);
+		store.add({
+			name: file.name,
+			type: file.type,
+			buffer: buffer
+		}).onsuccess = () => resolve();
+		tx.onerror = e => reject(e.target.error);
 	});
 }
 
