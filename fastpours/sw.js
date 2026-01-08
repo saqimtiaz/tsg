@@ -19,14 +19,19 @@ self.addEventListener('fetch', event => {
 			
 			try {
 				const formData = await event.request.formData();
-				const files = formData.getAll('photo'); // matches manifest
+				const files = formData.getAll('photo');
 
-				console.log('SW: Shared files', files);
-
-				// Send files to the page
+				const serializedFiles = await Promise.all(files.map(async f => {
+					const arrayBuffer = await f.arrayBuffer();
+					return {
+						name: f.name,
+						type: f.type,
+						buffer: arrayBuffer
+					};
+				}));
 
 				allClients.forEach(client => {
-					client.postMessage({ type: 'shared-files', files: files.map(f => ({ name: f.name, blob: f })) });
+					client.postMessage({ type: 'shared-files', files: serializedFiles }, serializedFiles.map(f => f.buffer));
 				});
 
 				// Redirect to main app page

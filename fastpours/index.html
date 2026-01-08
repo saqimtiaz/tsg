@@ -311,10 +311,11 @@ if (navigator.serviceWorker) {
 		}
 		if (data?.type === 'shared-files' && data.files?.length) {
 			console.log('Page: Received shared files from SW', data.files);
-			const file = data.files[0].blob; // take first file
-			loadImage(file, img => {
+			const f = data.files[0];
+			const blob = new Blob([f.buffer], { type: f.type });
+			loadImage(blob, img => {
 				photoImg = img;
-				photoFilename = data.files[0].name;
+				photoFilename = f.name;
 				resetPhoto();
 				draw();
 			});
