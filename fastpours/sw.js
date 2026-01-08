@@ -8,10 +8,15 @@ self.addEventListener('activate', event => {
 
 // Intercept share POSTs
 self.addEventListener('fetch', event => {
+	// sw.js
+	allClients.forEach(client => {
+		client.postMessage({ type: 'sw-log', message: 'Received share POST' });
+	});
+
 	if (event.request.method === 'POST' && event.request.url.includes('/tsg/fastpours/index.html')) {
 		event.respondWith((async () => {
 			console.log('SW: Received a share POST', event.request.url);
-
+			
 			try {
 				const formData = await event.request.formData();
 				const files = formData.getAll('photo'); // matches manifest

@@ -306,6 +306,9 @@ if ("serviceWorker" in navigator) {
 if (navigator.serviceWorker) {
 	navigator.serviceWorker.addEventListener('message', e => {
 		const data = e.data;
+		if (data?.type === 'sw-log') {
+			console.log('SW says:', data.message);
+		}
 		if (data?.type === 'shared-files' && data.files?.length) {
 			console.log('Page: Received shared files from SW', data.files);
 			const file = data.files[0].blob; // take first file
