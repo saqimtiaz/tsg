@@ -1,8 +1,8 @@
 {
   "name": "Fast Pours",
   "short_name": "Fast Pours",
-  "start_url": "/",
-  "scope": "/",
+  "start_url": "/tsg/fastpours/",
+  "scope": "/tsg/fastpours/",
   "display": "standalone",
   "background_color": "#111111",
   "theme_color": "#111111",
