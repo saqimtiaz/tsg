@@ -50,9 +50,19 @@ button:focus-visible {
 		0 0 0 3px rgba(255,255,255,0.15),
 		0 6px 18px rgba(0,0,0,0.45);
 }
-#exportBtn {
+#exportBtn, #shareBtn {
 	min-width: 250px;
 }
+
+.export-actions{
+	display:flex;
+	gap:12px;
+	justify-content: center;
+	margin-top: 10px;
+	margin-bottom: 10px;
+}
+
+
 
 </style>
 </head>
@@ -61,8 +71,9 @@ button:focus-visible {
 	<div id="canvasWrap">
 		<canvas id="canvas"></canvas>
 	</div>
-	<div id="controls">
+	<div class="export-actions">
 		<button id="exportBtn">Save</button>
+		<button id="shareBtn" hidden>Share</button>
 	</div>
 </div>
 <script>
@@ -341,6 +352,8 @@ canvas.addEventListener("wheel", e=>{if(!photoImg) return; e.preventDefault(); s
 window.addEventListener("keydown", e=>{if(!photoImg) return; const step=e.shiftKey?KEY_NUDGE_FAST:KEY_NUDGE; if(e.key==="ArrowLeft") offsetX-=step; if(e.key==="ArrowRight") offsetX+=step; if(e.key==="ArrowUp") offsetY-=step; if(e.key==="ArrowDown") offsetY+=step; draw();});
 
 /* ================= EXPORT ================= */
+
+/*
 document.getElementById("exportBtn").onclick=()=>{
 	const link=document.createElement("a");
 	const now=new Date();
@@ -350,6 +363,182 @@ document.getElementById("exportBtn").onclick=()=>{
 	link.href=canvas.toDataURL("image/png");
 	link.click();
 };
+*/
+
+const DB_NAME = "fastpours-fs";
+const DB_VERSION = 1;
+const STORE_NAME = "handles";
+
+function openDB(){
+	return new Promise((resolve, reject)=>{
+		const req = indexedDB.open(DB_NAME, DB_VERSION);
+
+		req.onupgradeneeded = e => {
+			const db = e.target.result;
+			if(!db.objectStoreNames.contains(STORE_NAME)){
+				db.createObjectStore(STORE_NAME);
+			}
+		};
+
+		req.onsuccess = () => resolve(req.result);
+		req.onerror = () => reject(req.error);
+	});
+}
+
+async function saveDirectoryHandle(dirHandle){
+	const db = await openDB();
+	const tx = db.transaction(STORE_NAME, "readwrite");
+	tx.objectStore(STORE_NAME).put(dirHandle, "lastDir");
+	return tx.complete;
+}
+
+
+function supportsFileSystemSave(){
+	return "showSaveFilePicker" in window;
+}
+
+function generateFilename(){
+	const now = new Date();
+	const timestamp = now.toISOString().replace(/[:.]/g,"-");
+	const prefix = photoFilename
+		? photoFilename.replace(/\.[^/.]+$/,"") + "_"
+		: "";
+	return `fastpours-${prefix}${timestamp}.png`;
+}
+
+let lastDirectoryHandle = null;
+
+async function pickDirectory(){
+	const dir = await window.showDirectoryPicker({
+		mode: "readwrite",
+		startIn: lastDirectoryHandle || "pictures"
+	});
+
+	await saveDirectoryHandle(dir);
+	lastDirectoryHandle = dir;
+	return dir;
+}
+
+async function ensureWritePermission(dirHandle){
+	const perm = await dirHandle.queryPermission({ mode: "readwrite" });
+	if (perm === "granted") return true;
+
+	const req = await dirHandle.requestPermission({ mode: "readwrite" });
+	return req === "granted";
+}
+
+
+async function saveWithFileSystem(blob){
+	let dir = lastDirectoryHandle;
+
+	if(!dir){
+		dir = await pickDirectory();
+	}
+
+	const hasPerm = await ensureWritePermission(dir);
+	if(!hasPerm){
+		console.warn("Write permission denied");
+		return;
+	}
+
+	const filename = generateFilename();
+
+	const fileHandle = await dir.getFileHandle(filename, { create: true });
+	const writable = await fileHandle.createWritable();
+	await writable.write(blob);
+	await writable.close();
+}
+
+
+async function loadDirectoryHandle(){
+	const db = await openDB();
+	const tx = db.transaction(STORE_NAME, "readonly");
+	const handle = await new Promise(res=>{
+		const req = tx.objectStore(STORE_NAME).get("lastDir");
+		req.onsuccess = () => res(req.result || null);
+		req.onerror = () => res(null);
+	});
+
+	if(!handle) return null;
+
+	// Permission MUST be re-validated
+	const perm = await handle.queryPermission({ mode: "readwrite" });
+	if(perm === "granted") return handle;
+
+	const request = await handle.requestPermission({ mode: "readwrite" });
+	return request === "granted" ? handle : null;
+}
+
+
+function downloadBlob(blob, filename){
+	const url = URL.createObjectURL(blob);
+	const link = document.createElement("a");
+	link.href = url;
+	link.download = filename;
+	link.click();
+	URL.revokeObjectURL(url);
+}
+
+document.getElementById("exportBtn").onclick = async () => {
+	const filename = generateFilename();
+
+	const blob = await new Promise(res =>
+		canvas.toBlob(res, "image/png")
+	);
+
+	try{
+		if (supportsFileSystemSave()) {
+			await saveWithFileSystem(blob);
+		}else{
+			downloadBlob(blob, filename);
+		}
+	}catch(err){
+		// User cancelled save dialog or permission denied
+		console.warn("Export cancelled", err);
+	}
+};
+
+const exportBtn = document.getElementById("exportBtn");
+
+if (supportsFileSystemSave()) {
+	exportBtn.textContent = "Save";
+}else{
+	exportBtn.textContent = "Download";
+}
+
+
+/**** SHARE ***/
+const shareBtn = document.getElementById("shareBtn");
+
+async function canShareImage() {
+	if (!navigator.canShare || !navigator.share) return false;
+
+	const testBlob = new Blob(["x"], { type: "image/png" });
+	const testFile = new File([testBlob], "test.png", { type: "image/png" });
+
+	return navigator.canShare({ files: [testFile] });
+}
+
+canShareImage().then(can => {
+	if (can) shareBtn.hidden = false;
+});
+
+shareBtn.addEventListener("click", async () => {
+	const blob = await new Promise(res => canvas.toBlob(res, "image/png"));
+	const file = new File([blob], "fast-pours.png", { type: "image/png" });
+
+	try{
+		await navigator.share({
+			files: [file],
+			title: "Fast Pours",
+			text: "Exported image"
+		});
+	}catch(err){
+		// User cancelled or system error
+		console.warn("Share cancelled", err);
+	}
+});
+
 
 
 /*** **/
@@ -418,6 +607,7 @@ function loadDefaultTemplateIfNeeded() {
 
 /* ================= INIT ================= */
 window.addEventListener("load", async () => {
+	lastDirectoryHandle = await loadDirectoryHandle();
 	loadTemplateFromStorage();
 	loadDefaultTemplateIfNeeded();
 	resizeCanvas();
