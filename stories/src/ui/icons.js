@@ -47,22 +47,32 @@ export const icons = {
 };
 
 /**
- * Set button's innerHTML to icon SVG
- * @param {HTMLElement} button - Button element
+ * Set element's innerHTML to icon SVG
+ * @param {HTMLElement} element - Element with data-icon attribute
  * @param {string} iconName - Icon name from icons object
  */
-export function setButtonIcon(button, iconName) {
-  if (!button) {
-    console.warn('setButtonIcon: button element is null');
+export function setElementIcon(element, iconName) {
+  if (!element) {
+    console.warn('setElementIcon: element is null');
     return;
   }
   
   if (!icons[iconName]) {
-    console.warn(`setButtonIcon: Icon not found: ${iconName}`);
+    console.warn(`setElementIcon: Icon not found: ${iconName}`);
     return;
   }
   
-  button.innerHTML = icons[iconName];
+  element.innerHTML = icons[iconName];
+}
+
+/**
+ * Set button's innerHTML to icon SVG
+ * @param {HTMLElement} button - Button element
+ * @param {string} iconName - Icon name from icons object
+ * @deprecated Use setElementIcon instead
+ */
+export function setButtonIcon(button, iconName) {
+  setElementIcon(button, iconName);
 }
 
 /**
@@ -89,60 +99,18 @@ export function createIconElement(iconName, className = '') {
 }
 
 /**
- * Replace img src with inline SVG
- * @param {HTMLImageElement} img - Image element to replace
- * @param {string} iconName - Icon name from icons object
- */
-export function replaceImgWithIcon(img, iconName) {
-  if (!img || !icons[iconName]) return;
-  
-  const svg = createIconElement(iconName, img.className);
-  if (svg && img.parentNode) {
-    img.parentNode.replaceChild(svg, img);
-  }
-}
-
-/**
- * Initialize all icon images in the document
- * Replaces <img src="..."> with inline SVG
+ * Initialize all icon elements in the document
+ * Replaces <span data-icon="iconName"> with inline SVG
  */
 export function initializeIcons() {
-  // Map of icon filenames to icon names
-  const iconMap = {
-    'text-mode.svg': 'textMode',
-    'image-mode.svg': 'imageMode',
-    'add-text.svg': 'addText',
-    'save.svg': 'save',
-    'share.svg': 'share',
-    'reset.svg': 'reset',
-    'delete.svg': 'delete',
-    'toggle-controls.svg': 'toggleControls',
-    'size-9-16.svg': 'size916',
-    'size-3-4.svg': 'size34',
-    'font-family.svg': 'fontFamily',
-    'font-size.svg': 'fontSize',
-    'font-weight.svg': 'fontWeight',
-    'text-color.svg': 'textColor',
-    'text-align.svg': 'textAlign',
-    'line-height.svg': 'lineHeight',
-    'char-spacing.svg': 'charSpacing',
-    'bg-color.svg': 'bgColor',
-    'bg-opacity.svg': 'bgOpacity',
-    'padding.svg': 'padding',
-    'offset.svg': 'offset'
-  };
-  
-  // Find all img elements with icon paths
-  document.querySelectorAll('img[src]').forEach(img => {
-    const src = img.getAttribute('src');
-    if (!src) return;
-    
-    // Extract filename from various path formats
-    const filename = src.split('/').pop().split('?')[0];
-    const iconName = iconMap[filename];
+  // Find all elements with data-icon attribute
+  document.querySelectorAll('[data-icon]').forEach(element => {
+    const iconName = element.getAttribute('data-icon');
     
     if (iconName && icons[iconName]) {
-      replaceImgWithIcon(img, iconName);
+      element.innerHTML = icons[iconName];
+    } else if (iconName) {
+      console.warn(`Icon not found: ${iconName}`);
     }
   });
 }
