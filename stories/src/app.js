@@ -671,11 +671,15 @@ window.addEventListener("load", async () => {
 	await initDB();
 	console.log('DB initialized');
 	
-	// Load directory handle for export
-	const { loadDirectoryHandle } = await import('./features/export.js');
-	const savedDir = await loadDirectoryHandle();
-	if (savedDir) {
-		console.log('Loaded saved directory handle');
+	// Load directory handle for export (may fail silently, that's OK)
+	try {
+		const { loadDirectoryHandle } = await import('./features/export.js');
+		const savedDir = await loadDirectoryHandle();
+		if (savedDir) {
+			console.log('Loaded saved directory handle');
+		}
+	} catch (err) {
+		console.log('Could not load directory handle at startup (expected)');
 	}
 	
 	resizeCanvas();

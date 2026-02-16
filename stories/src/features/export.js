@@ -67,21 +67,10 @@ async function loadDirectoryHandle() {
 
 		if (!handle) return null;
 
-		// CRITICAL: Permission MUST be re-validated
-		const perm = await handle.queryPermission({ mode: "readwrite" });
-		if (perm === "granted") {
-			lastDirectoryHandle = handle;  // ← Set the cached handle
-			return handle;
-		}
-
-		// Request permission if not granted
-		const request = await handle.requestPermission({ mode: "readwrite" });
-		if (request === "granted") {
-			lastDirectoryHandle = handle;  // ← Set the cached handle
-			return handle;
-		}
-		
-		return null;
+		// Just cache the handle, DON'T validate permission yet
+		// Permission will be validated/requested when user clicks Save (has user activation)
+		lastDirectoryHandle = handle;
+		return handle;
 	} catch (err) {
 		console.warn('Could not load directory handle', err);
 		return null;
