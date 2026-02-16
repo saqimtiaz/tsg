@@ -112,20 +112,23 @@ async function ensureWritePermission(dirHandle) {
 }
 
 async function saveWithFileSystem(blob, filename) {
-	// Always ask user to pick directory (for debugging)
-	// This ensures we always get fresh permissions
-	console.log('Picking directory...', blob.size, 'bytes');
-	const dir = await pickDirectory();
-	if (!dir) return false; // User cancelled
-
-	console.log('Got directory:', dir.name);
-
-	// Save the file
+	console.log('Saving file...', blob.size, 'bytes');
+	
 	try {
-		console.log('Getting file handle for:', filename);
-		const fileHandle = await dir.getFileHandle(filename, { create: true });
+		// Use showSaveFilePicker instead of showDirectoryPicker
+		// This works on both desktop AND mobile
+		const fileHandle = await window.showSaveFilePicker({
+			suggestedName: filename,
+			types: [{
+				description: 'PNG Image',
+				accept: { 'image/png': ['.png'] }
+			}],
+			startIn: 'pictures'
+		});
 		
+		console.log('Got file handle:', fileHandle.name);
 		console.log('Creating writable stream...');
+		
 		const writable = await fileHandle.createWritable();
 		
 		console.log('Writing blob...', blob.size, 'bytes');
@@ -135,12 +138,14 @@ async function saveWithFileSystem(blob, filename) {
 		await writable.close();
 		
 		console.log('Save successful!');
-		toast.success(`Saved to ${dir.name}/${filename}`, 2500);
+		toast.success(`Saved as ${fileHandle.name}`, 2500);
 		return true;
 	} catch (err) {
+		if (err.name === 'AbortError') {
+			// User cancelled - not an error
+			return false;
+		}
 		console.error('Failed to write file:', err);
-		console.error('Error name:', err.name);
-		console.error('Error message:', err.message);
 		throw err;
 	}
 }
