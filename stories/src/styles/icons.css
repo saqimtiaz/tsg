@@ -1,0 +1,20 @@
+/* filepath: c:\Users\saq\webdav\tsg\stories\styles\icons.css */
+/* Icon styling for mode buttons */
+
+@layer components {
+	.mode-btn {
+		img,
+		svg {
+			filter: brightness(0) saturate(100%) invert(100%);
+			opacity: 0.6;
+		}
+
+		&.active,
+		&:hover {
+			img,
+			svg {
+				opacity: 1;
+			}
+		}
+	}
+}

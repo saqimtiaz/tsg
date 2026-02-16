@@ -1,0 +1,17 @@
+{
+  "name": "tsg-stories",
+  "version": "1.0.0",
+  "description": "Create beautiful story images with text overlays",
+  "type": "module",
+  "scripts": {
+    "dev": "vite --host",
+    "build": "vite build",
+    "preview": "vite preview --host",
+    "serve": "vite preview --port 3000"
+  },
+  "devDependencies": {
+    "@vitejs/plugin-basic-ssl": "^2.1.4",
+    "vite": "^7.3.1",
+    "vite-plugin-pwa": "^1.2.0"
+  }
+}

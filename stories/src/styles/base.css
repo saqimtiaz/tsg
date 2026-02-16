@@ -1,0 +1,131 @@
+/* filepath: c:\Users\saq\webdav\tsg\stories\styles\base.css */
+/* Base styles and layout */
+
+@layer base, layout, components, utilities;
+
+@layer base {
+	html,
+	body {
+		margin: 0;
+		padding: 0;
+		height: 100%;
+		background: #111;
+		color: #fff;
+		font-family: system-ui, sans-serif;
+		overflow: hidden;
+	}
+
+	canvas {
+		display: block;
+		background: transparent;
+		touch-action: none;
+	}
+}
+
+@layer layout {
+	#app {
+		display: flex;
+		flex-direction: column;
+		height: 100%;
+	}
+
+	#textControls {
+		flex-shrink: 0;
+	}
+
+	#canvasWrap {
+		flex: 1;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		min-height: 0;
+		position: relative;
+	}
+
+	#pixelWrap {
+		position: absolute;
+		top: 0;
+		left: 0;
+		transform-origin: top left;
+		overflow: hidden;
+	}
+
+	#canvas {
+		position: absolute;
+		top: 0;
+		left: 0;
+		z-index: 1;
+	}
+
+	#textCanvas {
+		position: absolute;
+		top: 0;
+		left: 0;
+		z-index: 3;
+	}
+
+	#controls {
+		padding: 10px;
+		text-align: center;
+	}
+
+	.export-actions {
+		display: flex;
+		gap: 12px;
+		justify-content: center;
+		margin-top: 10px;
+		margin-bottom: 10px;
+	}
+
+	/* Bottom controls */
+	#bottomControls {
+		display: flex;
+		gap: 20px;
+		justify-content: space-between;
+		padding: 10px;
+		overflow-x: auto;
+		max-width: var(--canvas-width, 100%);
+		width: var(--canvas-width);
+		margin: 0 auto;
+		box-sizing: border-box;
+	}
+
+	.control-group {
+		display: flex;
+		gap: 8px;
+		padding: 4px;
+		background: rgba(255, 255, 255, 0.08);
+		backdrop-filter: blur(12px);
+		border-radius: 12px;
+	}
+
+	#addTextBtnSeparator {
+		width: 1px;
+		background: rgba(255, 255, 255, 0.15);
+		margin: 0 4px;
+	}
+}
+
+@layer utilities {
+	.canvas-disabled {
+		pointer-events: none;
+	}
+
+	.hidden {
+		display: none;
+	}
+
+	/* Standard icon size */
+	img[width],
+	svg[width] {
+		width: auto;
+		height: auto;
+	}
+
+	button img,
+	button svg {
+		width: 30px;
+		height: 30px;
+	}
+
+}

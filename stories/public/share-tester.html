@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Share Target Tester</title>
+<style>
+  body { font-family: sans-serif; padding: 20px; max-width: 600px; margin: auto; }
+  input, button, textarea { width: 100%; margin-top: 10px; padding: 8px; }
+  #log { margin-top: 20px; white-space: pre-wrap; background: #f5f5f5; padding: 10px; border: 1px solid #ddd; height: 200px; overflow: auto; }
+</style>
+</head>
+<body>
+
+<h2>Share Target Tester</h2>
+
+<label>Target URL:</label>
+<input type="text" id="targetUrl" placeholder="Enter your share target URL" value="/tsg/stories/index.html">
+
+<label>Select image(s):</label>
+<input type="file" id="filePicker" multiple accept="image/*">
+
+<button id="sendBtn">Send to Share Target</button>
+
+<div id="log">Result will appear here...</div>
+
+<script>
+const targetUrlInput = document.getElementById('targetUrl');
+const filePicker = document.getElementById('filePicker');
+const sendBtn = document.getElementById('sendBtn');
+const log = document.getElementById('log');
+
+sendBtn.addEventListener('click', async () => {
+  const url = targetUrlInput.value.trim();
+  const files = filePicker.files;
+
+  if (!url) {
+    log.textContent = 'Error: Target URL is required.';
+    return;
+  }
+  if (!files.length) {
+    log.textContent = 'Error: Please select at least one file.';
+    return;
+  }
+
+  const formData = new FormData();
+  for (const file of files) {
+    formData.append('photo', file); // match your SW field name
+  }
+
+  log.textContent = 'Sending...';
+
+  try {
+    const response = await fetch(url, {
+      method: 'POST',
+      body: formData
+    });
+
+    if (!response.ok) {
+      log.textContent = `Error: ${response.status} ${response.statusText}`;
+      return;
+    }
+
+    log.textContent = 'Success! Response:\n' + (await response.text());
+  } catch (err) {
+    log.textContent = 'Fetch error:\n' + err;
+  }
+});
+</script>
+
+</body>
+</html>

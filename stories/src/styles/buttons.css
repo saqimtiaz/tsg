@@ -1,0 +1,117 @@
+/* filepath: c:\Users\saq\webdav\tsg\stories\styles\buttons.css */
+/* Button styles */
+
+@layer components {
+	button {
+		appearance: none;
+		-webkit-appearance: none;
+		border: none;
+		border-radius: 6px;
+		padding: 12px 22px;
+		font-size: 16px;
+		font-weight: 600;
+		letter-spacing: 5px;
+		color: #fff;
+		background: linear-gradient(180deg, #2a2a2a, #181818);
+		box-shadow:
+			0 1px 0 rgba(255, 255, 255, 0.08) inset,
+			0 6px 18px rgba(0, 0, 0, 0.45);
+		cursor: pointer;
+		transition:
+			transform 0.08s ease,
+			box-shadow 0.08s ease,
+			background 0.15s ease;
+
+		&:hover {
+			background: linear-gradient(180deg, #333, #1e1e1e);
+		}
+
+		&:active {
+			transform: translateY(1px);
+			box-shadow:
+				0 1px 0 rgba(255, 255, 255, 0.05) inset,
+				0 3px 10px rgba(0, 0, 0, 0.5);
+		}
+
+		&:focus-visible {
+			outline: none;
+			box-shadow:
+				0 0 0 3px rgba(255, 255, 255, 0.15),
+				0 6px 18px rgba(0, 0, 0, 0.45);
+		}
+	}
+
+	#exportBtn,
+	#shareBtn {
+		min-width: 100px;
+
+		img,
+		svg {
+			filter: brightness(0) saturate(100%) invert(100%);
+			opacity: 0.9;
+		}
+	}
+
+	/* Mode buttons (bottom controls) */
+	.mode-btn {
+		appearance: none;
+		-webkit-appearance: none;
+		border: none;
+		border-radius: 8px;
+		padding: 4px;
+		background: rgba(255, 255, 255, 0.08);
+		color: rgba(255, 255, 255, 0.6);
+		cursor: pointer;
+		transition: all 0.15s ease;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		min-width: 40px;
+		min-height: 40px;
+		font-size: 13px;
+		font-weight: 600;
+		letter-spacing: 0;
+
+		img,
+		svg {
+			display: block;
+			pointer-events: none;
+		}
+
+		&:hover {
+			background: rgba(255, 255, 255, 0.12);
+			color: rgba(255, 255, 255, 0.8);
+		}
+
+		&.active {
+			background: rgba(255, 255, 255, 0.25);
+			color: white;
+		}
+
+		&:active {
+			transform: scale(0.95);
+		}
+
+		&:disabled {
+			opacity: 0.3;
+			cursor: not-allowed;
+		}
+	}
+
+	/* Button variants */
+	.delete-btn {
+		&:hover {
+			background: rgba(255, 59, 48, 0.2);
+			color: #ff3b30;
+		}
+	}
+
+	.reset-btn {
+		color: rgba(255, 255, 255, 0.5);
+
+		&:hover {
+			background: rgba(255, 59, 48, 0.5);
+			color: rgba(255, 59, 48, 0.9);
+		}
+	}
+}

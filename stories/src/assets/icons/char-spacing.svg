@@ -1,0 +1,5 @@
+<svg width="30" height="30" viewBox="0 0 30 30" fill="none" xmlns="http://www.w3.org/2000/svg">
+	<text x="15" y="18" font-size="17" font-family="sans-serif" font-weight="900" text-anchor="middle" fill="currentColor">AV</text>
+	<path d="M6 23H24M9 20L6 23L9 26M21 20L24 23L21 26" 
+		stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>
