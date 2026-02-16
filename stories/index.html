@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<link rel="manifest" href="/tsg/stories/manifest.webmanifest">
+<meta name="theme-color" content="#111111">
+<title>TSG Stories</title>
+<link rel="stylesheet" href="./styles/base.css">
+<link rel="stylesheet" href="./styles/buttons.css">
+<link rel="stylesheet" href="./styles/text-controls.css">
+<link rel="stylesheet" href="./styles/icons.css">
+  <script type="module" crossorigin src="/tsg/stories/assets/app.hy3kCRvA.js"></script>
+  <link rel="stylesheet" crossorigin href="/tsg/stories/assets/main.BPP06kkw.css">
+<link rel="manifest" href="/tsg/stories/manifest.webmanifest"><script id="vite-plugin-pwa:register-sw" src="/tsg/stories/registerSW.js"></script></head>
+
+<body>
+<div id="app">
+	<div id="textControls" class="text-controls">
+
+		<!-- TOOLBAR -->
+		<div class="controls-row">
+
+			<button id="fontButton" class="icon-btn active">
+				<img src="./icons/font-family.svg" alt="Font">
+			</button>
+
+			<button id="fontWeightButton" class="icon-btn">
+				<img src="./icons/font-weight.svg" alt="Font Weight">
+			</button>
+
+			<button id="fontSizeButton" class="icon-btn">
+				<img src="./icons/font-size.svg" alt="Font Size">
+			</button>
+
+			<button id="textColorButton" class="icon-btn">
+				<img src="./icons/text-color.svg" alt="Text Color">
+			</button>
+
+			<button id="lineHeightButton" class="icon-btn">
+				<img src="./icons/line-height.svg" alt="Line Height">
+			</button>
+
+			<button id="charSpacingButton" class="icon-btn">
+				<img src="./icons/char-spacing.svg" alt="Character Spacing">
+			</button>
+
+			<button id="textAlignButton" class="icon-btn">
+				<img src="./icons/text-align.svg" alt="Text Align">
+			</button>
+
+			<div id="addTextBtnSeparator" class="hidden"></div>
+
+			<button id="bgColorButton" class="icon-btn">
+				<img src="./icons/bg-color.svg" alt="Background Color">
+			</button>
+
+			<button id="bgOpacityButton" class="icon-btn">
+				<img src="./icons/bg-opacity.svg" alt="Background Opacity">
+			</button>
+
+			<button id="paddingButton" class="icon-btn">
+				<img src="./icons/padding.svg" alt="Padding">
+			</button>
+
+			<button id="offsetButton" class="icon-btn">
+				<img src="./icons/offset.svg" alt="Offset">
+			</button>
+
+			<div class="controls-spacer"></div>
+
+			<button id="deleteTextBtn" class="icon-btn delete-btn" title="Delete Text Box">
+				<img src="./icons/delete.svg" alt="Delete">
+			</button>
+
+		</div>
+
+		<!-- CONTEXT PANEL -->
+		<div class="context-panel">
+
+			<!-- Fonts (default visible) -->
+			<div id="fontPanel" class="panel active font-grid">
+				<!-- Dynamically populated from fonts.js -->
+			</div>
+
+			<!-- Font size -->
+			<div id="fontSizePanel" class="panel">
+				<button data-fontsize="32">32</button>
+				<button data-fontsize="40">40</button>
+				<button data-fontsize="50">50</button>
+				<button data-fontsize="58">58</button>
+				<button data-fontsize="66">66</button>
+				<button data-fontsize="72">72</button>
+			</div>
+
+			<!-- Font weight -->
+			<div id="fontWeightPanel" class="panel">
+				<button data-weight="300">Light</button>
+				<button data-weight="400">Regular</button>
+				<button data-weight="500">Medium</button>
+				<button data-weight="700">Bold</button>
+				<button data-weight="900">Black</button>
+			</div>
+
+			<!-- Text color -->
+			<div id="textColorPanel" class="panel">
+				<div class="swatches">
+					<button style="--c:#ffffff"></button>
+					<button style="--c:#000000"></button>
+					<button style="--c:#ff3b30"></button>
+					<button style="--c:#ff9500"></button>
+					<button style="--c:#ffcc00"></button>
+					<button style="--c:#34c759"></button>
+					<button style="--c:#007aff"></button>
+					<button style="--c:#af52de"></button>
+				</div>
+				<button class="picker-btn">
+					Custom…
+					<input type="color" id="textColor">
+				</button>
+			</div>
+
+			<!-- Background color -->
+			<div id="bgColorPanel" class="panel">
+				<!-- Dynamically populated from textControls.js -->
+			</div>
+
+			<!-- BG opacity -->
+			<div id="bgOpacityPanel" class="panel">
+				<button data-bgopacity="0">0</button>
+				<button data-bgopacity="0.1">0.1</button>
+				<button data-bgopacity="0.2">0.2</button>
+				<button data-bgopacity="0.3">0.3</button>
+				<button data-bgopacity="0.4">0.5</button>
+				<button data-bgopacity="0.5">0.5</button>
+				<button data-bgopacity="0.6">0.6</button>
+				<button data-bgopacity="0.7">0.7</button>
+				<button data-bgopacity="0.8">0.8</button>
+				<button data-bgopacity="0.9">0.9</button>
+				<button data-bgopacity="1.0">1.0</button>
+			</div>
+
+			<!-- Line height -->
+			<div id="lineHeightPanel" class="panel">
+				<button data-lineheight="1.1">1.1</button>
+				<button data-lineheight="1.2">1.2</button>
+				<button data-lineheight="1.3">1.3</button>
+				<button data-lineheight="1.4">1.4</button>
+				<button data-lineheight="1.5">1.5</button>
+				<button data-lineheight="1.6">1.6</button>
+			</div>
+
+			<!-- Character spacing -->
+			<div id="charSpacingPanel" class="panel">
+				<button data-charspacing="-50">-50</button>
+				<button data-charspacing="-25">-25</button>
+				<button data-charspacing="0">0</button>
+				<button data-charspacing="25">25</button>
+				<button data-charspacing="50">50</button>
+				<button data-charspacing="75">75</button>
+				<button data-charspacing="100">100</button>
+				<button data-charspacing="150">150</button>
+				<button data-charspacing="200">200</button>
+			</div>
+
+			<!-- Text align -->
+			<div id="textAlignPanel" class="panel">
+				<button data-align="left">Left</button>
+				<button data-align="center">Center</button>
+				<button data-align="right">Right</button>
+			</div>
+
+			<!-- Padding -->
+			<div id="paddingPanel" class="panel">
+				<button data-padding="30">30</button>
+				<button data-padding="35">35</button>
+				<button data-padding="45">45</button>
+				<button data-padding="50">50</button>
+				<button data-padding="55">55</button>
+			</div>
+
+			<!-- Horizontal Offset -->
+			<div id="offsetPanel" class="panel">
+				<button data-offset="-10">-10</button>
+				<button data-offset="-5">-5</button>
+				<button data-offset="0">0</button>
+				<button data-offset="5">5</button>
+				<button data-offset="10">10</button>
+				<button data-offset="15">15</button>
+				<button data-offset="20">20</button>
+			</div>
+
+		</div>
+	</div>
+
+
+	<div id="canvasWrap">
+		<!-- pixelWrap keeps a 1:1 pixel coordinate system. It is scaled to fit the container -->
+		<div id="pixelWrap">
+			<canvas id="canvas"></canvas>
+			<!--this z-index needs to be inline so its copied by fabric -->
+			<canvas id="textCanvas" class="canvas-disabled" style="z-index:3;"></canvas>
+		</div>
+	</div>
+
+	<div id="bottomControls">
+		<!-- Main controls (center) -->
+		<div class="control-group">
+			<button id="imageModeBtn" class="mode-btn active" title="Image Mode">
+				<img src="./icons/image-mode.svg" alt="Image Mode">
+			</button>
+			<button id="textModeBtn" class="mode-btn" title="Text Mode">
+				<img src="./icons/text-mode.svg" alt="Text Mode">
+			</button>
+			<div id="addTextBtnSeparator" class="hidden"></div>
+			<button id="addNewTextBtn" class="mode-btn hidden" title="Add Text Box">
+				<img src="./icons/add-text.svg" alt="Add Text">
+			</button>
+			<button id="toggleTextControlsBtn" class="mode-btn hidden" title="Toggle Text Controls">
+				<img src="./icons/toggle-controls.svg" alt="Toggle Controls">
+			</button>
+		</div>
+		<!-- Settings group (right) -->
+		<div class="control-group">
+			<button id="resetBtn" class="mode-btn reset-btn" title="Reset App">
+				<img src="./icons/reset.svg" alt="Reset">
+			</button>
+			<button id="sizeBtn" class="mode-btn" title="Canvas Aspect Ratio (9:16 or 3:4)">
+				<img id="sizeIcon" src="./icons/size-3-4.svg" alt="Size">
+			</button>
+		</div>
+	</div>
+
+
+
+	<div class="export-actions">
+		<button id="exportBtn">
+			<img src="./icons/save.svg" alt="Save">
+		</button>
+		<button id="shareBtn" class="hidden">
+			<img src="./icons/share.svg" alt="Share">
+		</button>
+	</div>
+</div></body>
+</html>
