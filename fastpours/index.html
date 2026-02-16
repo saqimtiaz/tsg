@@ -365,6 +365,10 @@ document.getElementById("exportBtn").onclick=()=>{
 };
 */
 
+function isMobile() {
+	return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+}
+
 const DB_NAME = "fastpours-fs";
 const DB_VERSION = 1;
 const STORE_NAME = "handles";
@@ -429,6 +433,27 @@ async function ensureWritePermission(dirHandle){
 
 
 async function saveWithFileSystem(blob){
+	const mobile = isMobile();
+	
+	// On mobile, use file picker (directory picker is broken)
+	if (mobile) {
+		const filename = generateFilename();
+		const fileHandle = await window.showSaveFilePicker({
+			suggestedName: filename,
+			types: [{
+				description: 'PNG Image',
+				accept: { 'image/png': ['.png'] }
+			}],
+			startIn: 'pictures'
+		});
+		
+		const writable = await fileHandle.createWritable();
+		await writable.write(blob);
+		await writable.close();
+		return;
+	}
+	
+	// On desktop, use directory picker (remembers location)
 	let dir = lastDirectoryHandle;
 
 	if(!dir){
