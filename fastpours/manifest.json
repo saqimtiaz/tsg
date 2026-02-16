@@ -1,6 +1,6 @@
 {
-  "name": "Fast Pours",
-  "short_name": "Fast Pours",
+  "name": "TSG Fast Pours",
+  "short_name": "TSG Fast Pours",
   "start_url": "/tsg/fastpours/",
   "scope": "/tsg/fastpours/",
   "display": "standalone",
