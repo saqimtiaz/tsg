@@ -7,7 +7,6 @@
     Montserrat
 - Color picker UI
 - only show text controls toggle when textbox selected?
-- distinct icons for both apps TODO: 
 
 ## Future
 - refactor toasts and export.js and share them between both apps
