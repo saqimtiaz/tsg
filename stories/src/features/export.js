@@ -8,6 +8,11 @@ import { toast } from '../ui/toast.js';
 
 /* ================= HELPERS ================= */
 
+// Detect mobile browsers
+function isMobile() {
+	return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+}
+
 // Generate filename with timestamp
 function generateFilename() {
 	const now = new Date();
@@ -112,113 +117,100 @@ async function ensureWritePermission(dirHandle) {
 }
 
 async function saveWithDirectoryPicker(blob, filename) {
-    console.log('Trying directory picker approach...', blob.size, 'bytes');
-    
-    try {
-        // Get directory (with permission prompt)
-        let dir = lastDirectoryHandle;
-        
-        if (!dir) {
-            console.log('Picking directory...');
-            dir = await window.showDirectoryPicker({
-                mode: "readwrite",
-                startIn: "pictures"
-            });
-            await saveDirectoryHandle(dir);
-            lastDirectoryHandle = dir;
-        }
-        
-        console.log('Got directory:', dir.name);
-        
-        // Ensure directory permission
-        const hasDirPerm = await ensureWritePermission(dir);
-        if (!hasDirPerm) {
-            console.log('Directory permission denied, clearing cache');
-            lastDirectoryHandle = null;
-            throw new Error('Directory permission denied');
-        }
-        
-        console.log('Getting file handle for:', filename);
-        const fileHandle = await dir.getFileHandle(filename, { create: true });
-        
-        // ⭐ NEW: Check permission on the FILE handle, not just directory
-        console.log('Checking file handle permission...');
-        const filePermQuery = await fileHandle.queryPermission({ mode: "readwrite" });
-        console.log('File permission state:', filePermQuery);
-        
-        if (filePermQuery !== 'granted') {
-            console.log('Requesting file handle permission...');
-            const filePermRequest = await fileHandle.requestPermission({ mode: "readwrite" });
-            console.log('File permission result:', filePermRequest);
-            
-            if (filePermRequest !== 'granted') {
-                throw new Error('File permission denied');
-            }
-        }
-        
-        // ⭐ NEW: Try createWritable with "siloed" mode to avoid locks
-        console.log('Creating writable stream with siloed mode...');
-        const writable = await fileHandle.createWritable({ 
-            keepExistingData: false,
-            mode: "siloed"  // Bypass lock issues
-        });
-        
-        console.log('Writing blob...', blob.size, 'bytes');
-        await writable.write(blob);
-        
-        console.log('Closing writable...');
-        await writable.close();
-        
-        console.log('Save successful!');
-        toast.success(`Saved to ${dir.name}/`, 2500);
-        return true;
-    } catch (err) {
-        console.error('Directory picker save failed:', err);
-        console.error('Error name:', err.name);
-        console.error('Error message:', err.message);
-        throw err;
-    }
+	console.log('Trying directory picker approach...', blob.size, 'bytes');
+	
+	let dir = lastDirectoryHandle;
+	
+	if (!dir) {
+		console.log('Picking directory...');
+		dir = await window.showDirectoryPicker({
+			mode: "readwrite",
+			startIn: "pictures"
+		});
+		await saveDirectoryHandle(dir);
+		lastDirectoryHandle = dir;
+	}
+	
+	console.log('Got directory:', dir.name);
+	
+	// Ensure directory permission
+	const hasDirPerm = await ensureWritePermission(dir);
+	if (!hasDirPerm) {
+		console.log('Directory permission denied');
+		lastDirectoryHandle = null;
+		throw new Error('Directory permission denied');
+	}
+	
+	console.log('Getting file handle for:', filename);
+	const fileHandle = await dir.getFileHandle(filename, { create: true });
+	
+	console.log('Creating writable stream...');
+	const writable = await fileHandle.createWritable();
+	
+	console.log('Writing blob...', blob.size, 'bytes');
+	await writable.write(blob);
+	
+	console.log('Closing writable...');
+	await writable.close();
+	
+	console.log('Save successful!');
+	toast.success(`Saved to ${dir.name}/`, 2500);
+	return true;
+}
+
+async function saveWithFilePicker(blob, filename) {
+	console.log('Using file picker...');
+	
+	const fileHandle = await window.showSaveFilePicker({
+		suggestedName: filename,
+		types: [{
+			description: 'PNG Image',
+			accept: { 'image/png': ['.png'] }
+		}],
+		startIn: 'pictures'
+	});
+	
+	console.log('Got file handle:', fileHandle.name);
+	
+	const writable = await fileHandle.createWritable();
+	await writable.write(blob);
+	await writable.close();
+	
+	console.log('File picker save successful!');
+	toast.success(`Saved as ${fileHandle.name}`, 2500);
+	return true;
 }
 
 async function saveWithFileSystem(blob, filename) {
-    // Try directory picker first (remembers location)
-    try {
-        const success = await saveWithDirectoryPicker(blob, filename);
-        if (success) return true;
-    } catch (err) {
-        console.warn('Directory picker failed, trying file picker...', err);
-        
-        // Clear cached handle if it's failing
-        lastDirectoryHandle = null;
-    }
-    
-    // Fallback to file picker (works everywhere)
-    console.log('Using file picker...');
-    try {
-        const fileHandle = await window.showSaveFilePicker({
-            suggestedName: filename,
-            types: [{
-                description: 'PNG Image',
-                accept: { 'image/png': ['.png'] }
-            }],
-            startIn: 'pictures'
-        });
-        
-        console.log('Got file handle:', fileHandle.name);
-        
-        const writable = await fileHandle.createWritable();
-        await writable.write(blob);
-        await writable.close();
-        
-        console.log('File picker save successful!');
-        toast.success(`Saved as ${fileHandle.name}`, 2500);
-        return true;
-    } catch (err) {
-        if (err.name === 'AbortError') {
-            return false; // User cancelled
-        }
-        throw err;
-    }
+	const mobile = isMobile();
+	
+	// On mobile, always use file picker (directory picker is broken)
+	if (mobile) {
+		console.log('Mobile detected, using file picker...');
+		return await saveWithFilePicker(blob, filename);
+	}
+	
+	// On desktop, try directory picker first (remembers location)
+	try {
+		return await saveWithDirectoryPicker(blob, filename);
+	} catch (err) {
+		if (err.name === 'AbortError') {
+			return false; // User cancelled
+		}
+		console.warn('Directory picker failed, falling back to file picker...', err);
+		lastDirectoryHandle = null; // Clear cache
+		return await saveWithFilePicker(blob, filename);
+	}
+}
+
+function downloadBlob(blob, filename) {
+	const url = URL.createObjectURL(blob);
+	const link = document.createElement('a');
+	link.href = url;
+	link.download = filename;
+	link.click();
+	URL.revokeObjectURL(url);
+	toast.success('Image downloaded to Downloads/', 2500);
 }
 
 // Create export canvas with image and text layers
