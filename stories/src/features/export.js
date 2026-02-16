@@ -112,62 +112,35 @@ async function ensureWritePermission(dirHandle) {
 }
 
 async function saveWithFileSystem(blob, filename) {
-	let dir = lastDirectoryHandle;
+	// Always ask user to pick directory (for debugging)
+	// This ensures we always get fresh permissions
+	console.log('Picking directory...', blob.size, 'bytes');
+	const dir = await pickDirectory();
+	if (!dir) return false; // User cancelled
 
-	// If no cached handle, ask user to pick one
-	if (!dir) {
-		dir = await pickDirectory();
-		if (!dir) return false; // User cancelled
-	}
+	console.log('Got directory:', dir.name);
 
-	// Ensure we have write permission
-	const hasPerm = await ensureWritePermission(dir);
-	if (!hasPerm) {
-		console.warn("Write permission denied, asking user to pick directory again");
-		// Permission denied - ask user to pick a new directory
-		dir = await pickDirectory();
-		if (!dir) return false; // User cancelled
-	}
-
-	// Try to save the file
+	// Save the file
 	try {
+		console.log('Getting file handle for:', filename);
 		const fileHandle = await dir.getFileHandle(filename, { create: true });
+		
+		console.log('Creating writable stream...');
 		const writable = await fileHandle.createWritable();
+		
+		console.log('Writing blob...', blob.size, 'bytes');
 		await writable.write(blob);
+		
+		console.log('Closing writable...');
 		await writable.close();
 		
+		console.log('Save successful!');
 		toast.success(`Saved to ${dir.name}/${filename}`, 2500);
 		return true;
 	} catch (err) {
 		console.error('Failed to write file:', err);
-		
-		// If write failed, the cached handle might be stale
-		// Clear it and ask user to pick new directory
-		if (err.name === 'NoModificationAllowedError' || err.name === 'NotAllowedError') {
-			console.warn('File write failed, clearing cached handle and asking for new directory');
-			lastDirectoryHandle = null;
-			
-			toast.warning('Please select save location again', 2000);
-			
-			// Ask user to pick directory again
-			dir = await pickDirectory();
-			if (!dir) return false;
-			
-			// Retry with new directory
-			try {
-				const fileHandle = await dir.getFileHandle(filename, { create: true });
-				const writable = await fileHandle.createWritable();
-				await writable.write(blob);
-				await writable.close();
-				
-				toast.success(`Saved to ${dir.name}/${filename}`, 2500);
-				return true;
-			} catch (retryErr) {
-				console.error('Retry also failed:', retryErr);
-				throw retryErr;
-			}
-		}
-		
+		console.error('Error name:', err.name);
+		console.error('Error message:', err.message);
 		throw err;
 	}
 }
