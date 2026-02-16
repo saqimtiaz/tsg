@@ -1,0 +1,45 @@
+name: Deploy GitHub Pages
+
+on:
+    push:
+        branches:
+            - main
+
+permissions:
+    contents: write
+
+jobs:
+    deploy:
+        runs-on: ubuntu-latest
+
+        steps:
+            - name: Checkout main
+              uses: actions/checkout@v4
+
+            # ---------- Build stories ----------
+            - name: Setup Node
+              uses: actions/setup-node@v4
+              with:
+                node-version: 20
+
+            - name: Install stories deps
+              working-directory: stories
+              run: npm ci
+
+            - name: Build stories
+              working-directory: stories
+              run: npm run build
+
+            # ---------- Prepare publish folder ----------
+            - name: Prepare deploy directory
+              run: |
+                mkdir deploy
+                cp -r fastpours deploy/fastpours
+                cp -r stories/dist deploy/stories
+
+            # ---------- Deploy ----------
+            - name: Deploy to gh-pages
+              uses: peaceiris/actions-gh-pages@v4
+              with:
+                github_token: ${{ secrets.GITHUB_TOKEN }}
+                publish_dir: deploy
