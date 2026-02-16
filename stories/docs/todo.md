@@ -23,7 +23,6 @@ Sharing:
 -----------
 
 
-
 A blend of Malvasia, Ribolla and Friulano from older vineyards with a few days of maceration. Bright acidity, elegant with great minerality and tangerine notes from the Malvasia dominating the nose.
 
 ----
