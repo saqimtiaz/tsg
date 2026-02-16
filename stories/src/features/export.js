@@ -20,57 +20,151 @@ function generateFilename() {
 	return `tsg-stories-${year}${month}${date}${hours}${minutes}.png`;
 }
 
-// Save/load last used directory handle
-async function getLastDirectory() {
+// IndexedDB for directory handle persistence
+const DB_NAME = "tsg-export-fs";
+const DB_VERSION = 1;
+const STORE_NAME = "handles";
+
+function openDB() {
+	return new Promise((resolve, reject) => {
+		const req = indexedDB.open(DB_NAME, DB_VERSION);
+
+		req.onupgradeneeded = e => {
+			const db = e.target.result;
+			if (!db.objectStoreNames.contains(STORE_NAME)) {
+				db.createObjectStore(STORE_NAME);
+			}
+		};
+
+		req.onsuccess = () => resolve(req.result);
+		req.onerror = () => reject(req.error);
+	});
+}
+
+async function saveDirectoryHandle(dirHandle) {
 	try {
-		const handle = await indexedDB.open('tsg-export-dir', 1);
+		const db = await openDB();
+		const tx = db.transaction(STORE_NAME, "readwrite");
+		tx.objectStore(STORE_NAME).put(dirHandle, "lastDir");
 		return new Promise((resolve, reject) => {
-			handle.onsuccess = () => {
-				const db = handle.result;
-				if (!db.objectStoreNames.contains('directory')) {
-					resolve(null);
-					return;
-				}
-				const tx = db.transaction('directory', 'readonly');
-				const store = tx.objectStore('directory');
-				const request = store.get('lastDir');
-				request.onsuccess = () => resolve(request.result);
-				request.onerror = () => resolve(null);
-			};
-			handle.onupgradeneeded = (e) => {
-				const db = e.target.result;
-				if (!db.objectStoreNames.contains('directory')) {
-					db.createObjectStore('directory');
-				}
-			};
+			tx.oncomplete = () => resolve();
+			tx.onerror = () => reject(tx.error);
 		});
 	} catch (err) {
-		console.warn('Could not access directory storage', err);
+		console.warn('Could not save directory handle', err);
+	}
+}
+
+async function loadDirectoryHandle() {
+	try {
+		const db = await openDB();
+		const tx = db.transaction(STORE_NAME, "readonly");
+		const handle = await new Promise((resolve, reject) => {
+			const req = tx.objectStore(STORE_NAME).get("lastDir");
+			req.onsuccess = () => resolve(req.result || null);
+			req.onerror = () => reject(req.error);
+		});
+
+		if (!handle) return null;
+
+		// CRITICAL: Permission MUST be re-validated
+		const perm = await handle.queryPermission({ mode: "readwrite" });
+		if (perm === "granted") return handle;
+
+		// Request permission if not granted
+		const request = await handle.requestPermission({ mode: "readwrite" });
+		return request === "granted" ? handle : null;
+	} catch (err) {
+		console.warn('Could not load directory handle', err);
 		return null;
 	}
 }
 
-async function saveLastDirectory(dirHandle) {
+// Persistent directory handle
+let lastDirectoryHandle = null;
+
+async function pickDirectory() {
 	try {
-		const handle = await indexedDB.open('tsg-export-dir', 1);
-		return new Promise((resolve) => {
-			handle.onsuccess = () => {
-				const db = handle.result;
-				const tx = db.transaction('directory', 'readwrite');
-				const store = tx.objectStore('directory');
-				store.put(dirHandle, 'lastDir');
-				tx.oncomplete = () => resolve();
-			};
-			handle.onupgradeneeded = (e) => {
-				const db = e.target.result;
-				if (!db.objectStoreNames.contains('directory')) {
-					db.createObjectStore('directory');
-				}
-			};
+		const dir = await window.showDirectoryPicker({
+			mode: "readwrite",
+			startIn: lastDirectoryHandle || "pictures"
 		});
+
+		await saveDirectoryHandle(dir);
+		lastDirectoryHandle = dir;
+		return dir;
 	} catch (err) {
-		console.warn('Could not save directory', err);
+		if (err.name !== 'AbortError') {
+			console.warn('Directory picker failed', err);
+		}
+		return null;
 	}
+}
+
+async function ensureWritePermission(dirHandle) {
+	try {
+		const perm = await dirHandle.queryPermission({ mode: "readwrite" });
+		if (perm === "granted") return true;
+
+		const req = await dirHandle.requestPermission({ mode: "readwrite" });
+		return req === "granted";
+	} catch (err) {
+		console.warn('Permission check failed', err);
+		return false;
+	}
+}
+
+async function saveWithFileSystem(blob, filename) {
+	// Try to use last directory
+	let dir = lastDirectoryHandle;
+
+	// If no cached handle, try loading from IndexedDB
+	if (!dir) {
+		dir = await loadDirectoryHandle();
+		if (dir) lastDirectoryHandle = dir;
+	}
+
+	// If still no directory, ask user to pick one
+	if (!dir) {
+		dir = await pickDirectory();
+		if (!dir) return false; // User cancelled
+	}
+
+	// Ensure we have write permission
+	const hasPerm = await ensureWritePermission(dir);
+	if (!hasPerm) {
+		console.warn("Write permission denied");
+		// Try picking a new directory
+		dir = await pickDirectory();
+		if (!dir) return false;
+		
+		const retryPerm = await ensureWritePermission(dir);
+		if (!retryPerm) return false;
+	}
+
+	// Save the file
+	try {
+		const fileHandle = await dir.getFileHandle(filename, { create: true });
+		const writable = await fileHandle.createWritable();
+		await writable.write(blob);
+		await writable.close();
+		
+		toast.success(`Saved to ${dir.name}/${filename}`, 2500);
+		return true;
+	} catch (err) {
+		console.error('Failed to write file', err);
+		return false;
+	}
+}
+
+function downloadBlob(blob, filename) {
+	const url = URL.createObjectURL(blob);
+	const link = document.createElement('a');
+	link.href = url;
+	link.download = filename;
+	link.click();
+	URL.revokeObjectURL(url);
+	toast.success('Image downloaded to Downloads/', 2500);
 }
 
 // Create export canvas with image and text layers
@@ -125,55 +219,22 @@ export async function exportImage(baseCanvas, CANVAS_WIDTH, CANVAS_HEIGHT) {
 	const blob = await (await fetch(dataURL)).blob();
 	const filename = generateFilename();
 
-	const supportsFS = 'showSaveFilePicker' in window;
+	const supportsFS = 'showDirectoryPicker' in window;
+	
 	if (supportsFS) {
 		try {
-			// Try to use last directory if available
-			let dirHandle = await getLastDirectory();
+			// Try to save using directory picker (preserves last used directory)
+			const success = await saveWithFileSystem(blob, filename);
+			if (success) return; // Successfully saved
 			
-			// Verify we still have permission to the directory
-			if (dirHandle) {
-				const permission = await dirHandle.queryPermission({ mode: 'readwrite' });
-				if (permission !== 'granted') {
-					const requestPermission = await dirHandle.requestPermission({ mode: 'readwrite' });
-					if (requestPermission !== 'granted') {
-						dirHandle = null;
-					}
-				}
-			}
-			
-			// If no valid directory, prompt user to select one
-			if (!dirHandle) {
-				dirHandle = await window.showDirectoryPicker({ mode: 'readwrite' });
-				await saveLastDirectory(dirHandle);
-			}
-			
-			const fileHandle = await dirHandle.getFileHandle(filename, { create: true });
-			const writable = await fileHandle.createWritable();
-			await writable.write(blob);
-			await writable.close();
-			toast.success(`Saved to ${dirHandle.name}`);
+			// If saveWithFileSystem failed or user cancelled, fall through to download
 		} catch (err) {
-			// User cancelled or error - fall back to download
-			if (err.name !== 'AbortError') {
-				console.warn('File System Access API failed, falling back to download', err);
-			}
-			const link = document.createElement('a');
-			link.href = URL.createObjectURL(blob);
-			link.download = filename;
-			link.click();
-			toast.error('Could not save to file system.', 2500);
-			toast.success('Image downloaded to Downloads/', 2500);
+			console.warn('File System Access API failed', err);
 		}
-	} else {
-		// Fallback for browsers without File System Access API
-		const link = document.createElement('a');
-		link.href = URL.createObjectURL(blob);
-		link.download = filename;
-		link.click();
-		// Show success toast with download location
-		toast.success('Image saved to Downloads/', 2500);
 	}
+	
+	// Fallback: download
+	downloadBlob(blob, filename);
 }
 
 /* ================= SHARE ================= */
