@@ -69,11 +69,19 @@ async function loadDirectoryHandle() {
 
 		// CRITICAL: Permission MUST be re-validated
 		const perm = await handle.queryPermission({ mode: "readwrite" });
-		if (perm === "granted") return handle;
+		if (perm === "granted") {
+			lastDirectoryHandle = handle;  // ← Set the cached handle
+			return handle;
+		}
 
 		// Request permission if not granted
 		const request = await handle.requestPermission({ mode: "readwrite" });
-		return request === "granted" ? handle : null;
+		if (request === "granted") {
+			lastDirectoryHandle = handle;  // ← Set the cached handle
+			return handle;
+		}
+		
+		return null;
 	} catch (err) {
 		console.warn('Could not load directory handle', err);
 		return null;
@@ -115,16 +123,9 @@ async function ensureWritePermission(dirHandle) {
 }
 
 async function saveWithFileSystem(blob, filename) {
-	// Try to use last directory
 	let dir = lastDirectoryHandle;
 
-	// If no cached handle, try loading from IndexedDB
-	if (!dir) {
-		dir = await loadDirectoryHandle();
-		if (dir) lastDirectoryHandle = dir;
-	}
-
-	// If still no directory, ask user to pick one
+	// If no cached handle, ask user to pick one (FastPours pattern)
 	if (!dir) {
 		dir = await pickDirectory();
 		if (!dir) return false; // User cancelled
@@ -134,27 +135,17 @@ async function saveWithFileSystem(blob, filename) {
 	const hasPerm = await ensureWritePermission(dir);
 	if (!hasPerm) {
 		console.warn("Write permission denied");
-		// Try picking a new directory
-		dir = await pickDirectory();
-		if (!dir) return false;
-		
-		const retryPerm = await ensureWritePermission(dir);
-		if (!retryPerm) return false;
-	}
-
-	// Save the file
-	try {
-		const fileHandle = await dir.getFileHandle(filename, { create: true });
-		const writable = await fileHandle.createWritable();
-		await writable.write(blob);
-		await writable.close();
-		
-		toast.success(`Saved to ${dir.name}/${filename}`, 2500);
-		return true;
-	} catch (err) {
-		console.error('Failed to write file', err);
 		return false;
 	}
+
+	// Save the file (FastPours pattern - simple and direct)
+	const fileHandle = await dir.getFileHandle(filename, { create: true });
+	const writable = await fileHandle.createWritable();
+	await writable.write(blob);
+	await writable.close();
+	
+	toast.success(`Saved to ${dir.name}/${filename}`, 2500);
+	return true;
 }
 
 function downloadBlob(blob, filename) {
@@ -212,6 +203,9 @@ function createExportCanvas(baseCanvas, CANVAS_WIDTH, CANVAS_HEIGHT) {
 }
 
 /* ================= EXPORT ================= */
+
+// Export directory handle loader for app initialization
+export { loadDirectoryHandle };
 
 export async function exportImage(baseCanvas, CANVAS_WIDTH, CANVAS_HEIGHT) {
 	const exportCanvas = createExportCanvas(baseCanvas, CANVAS_WIDTH, CANVAS_HEIGHT);
