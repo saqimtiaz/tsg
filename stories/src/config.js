@@ -66,7 +66,7 @@ export const PRESET_VALUES = {
 /* ================= COLORS ================= */
 export const COLORS = {
     TEXT: ['#ffffff', '#1a1a1a', '#ff3b30', '#ff9500', '#ffcc00', '#34c759', '#007aff', '#af52de'],
-    BACKGROUND: ['#1a1a1a', '#ffffff', '#1a1a1a', '#333333', '#ff3b30', '#ff9500', '#ffcc00', '#34c759', '#007aff', '#af52de']
+    BACKGROUND: ['#000000', '#ffffff', '#1a1a1a', '#333333', '#ff3b30', '#ff9500', '#ffcc00', '#34c759', '#007aff', '#af52de']
 };
 
 /* ================= FABRIC CONFIG ================= */

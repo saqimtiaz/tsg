@@ -3,6 +3,7 @@ import { PRESET_VALUES, COLORS } from "../config.js";
 import { rgbToHex } from "../utils/utils.js";
 import { AppEvents, dispatchAppEvent, onAppEvent } from "../events.js";
 import { dom } from "../domCache.js";
+import Alwan from './../vendor/alwan/alwan.min.js';
 
 let currentTextObject = null;
 let fabricCanvas = null;
@@ -425,22 +426,15 @@ function setupBgColorPanel() {
     if (!bgColorPanel) return;
     
     // Create color picker if it doesn't exist
-    let bgColorPicker = bgColorPanel.querySelector('input[type="color"]');
-    if (!bgColorPicker) {
-        bgColorPicker = document.createElement('input');
-        bgColorPicker.type = 'color';
-        bgColorPicker.id = 'bgColor';
-        const pickerBtn = document.createElement('button');
+    let pickerBtn = bgColorPanel.querySelector('.picker-btn');
+    if (!pickerBtn) {
+        pickerBtn = document.createElement('button');
         pickerBtn.className = 'picker-btn';
         pickerBtn.textContent = 'Custom…';
-        pickerBtn.appendChild(bgColorPicker);
-        
         const swatches = document.createElement('div');
         swatches.className = 'swatches';
         
-        // Add color swatches
-        const colors = ['#000000', '#ffffff', '#1a1a1a', '#333333', '#ff3b30', '#ff9500', '#ffcc00', '#34c759', '#007aff', '#af52de'];
-        colors.forEach(color => {
+        COLORS.BACKGROUND.forEach(color => {
             const btn = document.createElement('button');
             btn.style.setProperty('--c', color);
             btn.addEventListener('click', () => {
@@ -451,11 +445,29 @@ function setupBgColorPanel() {
         
         bgColorPanel.appendChild(swatches);
         bgColorPanel.appendChild(pickerBtn);
+        const alwan = new Alwan(pickerBtn, {
+            swatches: [
+                ...COLORS.BACKGROUND
+            ],
+            preset:false,
+            inputs: {rgb: true},
+            preview: false,
+            copy: false,
+            popover: false,
+            target: "#bgColorPanel .swatches"
+        })
+        alwan.on("open", (ev) => {
+            const box = state.textBoxes.find(b => b.id === currentTextObject?.__boxId);
+            if (box) {
+                // Set color with current opacity
+                alwan.setColor(box.background);
+            }
+        });
+        alwan.on("color", (color) => {
+            handleBgColorChange(color.hex);
+            handleBgOpacityChange(color.rgb.a);
+        });
     }
-    
-    bgColorPicker.addEventListener('input', (e) => {
-        handleBgColorChange(e.target.value);
-    });
 }
 
 async function populateFontPanel() {
@@ -550,6 +562,14 @@ export function toggleTextControls() {
         // Hide controls
         hideTextControls();
         return true;
+    }
+}
+
+export function updateCurrentTextObject(textObj) {
+    // Called when selection changes - update current object and UI
+    currentTextObject = textObj;
+    if (textObj) {
+        updateActiveStates();
     }
 }
 

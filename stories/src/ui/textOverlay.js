@@ -1,5 +1,5 @@
 import { state, notifyChange, addTextBox as addTextBoxToState } from "../state.js";
-import { showTextControls, hideTextControls } from "./textControls.js";
+import { showTextControls, hideTextControls, updateCurrentTextObject } from "./textControls.js";
 import { resizeCanvas, setIsEditingText } from "../app.js";
 import { TEXT_DEFAULTS, FABRIC_CONFIG, TEXTBOX_DEFAULTS, INTERACTION_CONFIG } from "../config.js";
 import { generateId, loadFonts, snapToGrid } from "../utils/utils.js";
@@ -86,8 +86,11 @@ function syncObjectsToState() {
 
 /* ================= EVENT HANDLERS ================= */
 function handleSelection(e) {
-    // Don't automatically show controls on selection
-    // Controls are only shown via toggle button
+    // Update current text object when selection changes
+    const activeObj = e.selected?.[0];
+    if (activeObj && (activeObj.type === 'textbox' || activeObj.type === 'i-text')) {
+        updateCurrentTextObject(activeObj);
+    }
 }
 
 function handleSelectionCleared() {

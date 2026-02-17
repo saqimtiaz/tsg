@@ -14,13 +14,6 @@ import { setButtonIcon } from './ui/icons.js';
 import { toast } from './ui/toast.js';
 import Alwan from './vendor/alwan/alwan.min.js';
 
-Alwan.setDefaults({
-	preset:false,
-	inputs: {rgb: true},
-	preview: false,
-	copy: false
-});
-
 let CANVAS_WIDTH = 1080;
 let CANVAS_HEIGHT = 1920;
 
@@ -502,10 +495,13 @@ function setupModeButtons() {
 		swatches: [
 			...COLORS.BACKGROUND
 		],
+		preset:false,
+		inputs: {rgb: true},
+		preview: false,
+		copy: false
 	});
 	alwan.on("open", (ev) => {
 		alwan.setColor(state.canvasBackgroundColor);
-
 	});
 	alwan.on("color", (color) => {
 		setCanvasBackgroundColor(color.hex); // Use state helper to trigger autosave
