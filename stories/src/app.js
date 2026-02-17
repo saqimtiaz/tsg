@@ -14,6 +14,13 @@ import { setButtonIcon } from './ui/icons.js';
 import { toast } from './ui/toast.js';
 import Alwan from './vendor/alwan/alwan.min.js';
 
+Alwan.setDefaults({
+	preset:false,
+	inputs: {rgb: true},
+	preview: false,
+	copy: false
+});
+
 let CANVAS_WIDTH = 1080;
 let CANVAS_HEIGHT = 1920;
 
@@ -490,16 +497,11 @@ function setupModeButtons() {
 			toggleTextControlsBtn.classList.toggle('active');
 		}
 	});
-	Alwan.setDefaults({
+
+	const alwan = new Alwan(canvasBgColorBtn,{
 		swatches: [
 			...COLORS.BACKGROUND
 		],
-	});
-	const alwan = new Alwan(canvasBgColorBtn,{
-		preset:false,
-		inputs: {rgb: true},
-		preview: false,
-		copy: false
 	});
 	alwan.on("open", (ev) => {
 		alwan.setColor(state.canvasBackgroundColor);
