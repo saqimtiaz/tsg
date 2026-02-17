@@ -11,7 +11,8 @@ export const state = {
 	},
 	textBoxes: [],
 	canvasBackgroundColor: CANVAS_BG_COLOR,
-	activeTextBoxId: null
+	activeTextBoxId: null,
+	textBoxZOrder: [] // Track z-order by box IDs, last = highest
 };
 
 /* ================= STATE NOTIFICATIONS ================= */
@@ -42,6 +43,10 @@ function notifyStateChange() {
  */
 export function addTextBox(box) {
     state.textBoxes.push(box);
+    // Add to z-order (will be at top initially)
+    if (!state.textBoxZOrder.includes(box.id)) {
+        state.textBoxZOrder.push(box.id);
+    }
     notifyStateChange();
 }
 
@@ -66,8 +71,28 @@ export function removeTextBox(id) {
     const index = state.textBoxes.findIndex(b => b.id === id);
     if (index !== -1) {
         state.textBoxes.splice(index, 1);
+        // Remove from z-order
+        const zIndex = state.textBoxZOrder.indexOf(id);
+        if (zIndex !== -1) {
+            state.textBoxZOrder.splice(zIndex, 1);
+        }
         notifyStateChange();
     }
+}
+
+/**
+ * Bring a text box to front (highest z-index)
+ * @param {string} id - Text box ID
+ */
+export function bringTextBoxToFront(id) {
+    const zIndex = state.textBoxZOrder.indexOf(id);
+    if (zIndex !== -1) {
+        // Remove from current position
+        state.textBoxZOrder.splice(zIndex, 1);
+    }
+    // Add to end (highest z-index)
+    state.textBoxZOrder.push(id);
+    notifyStateChange();
 }
 
 /**

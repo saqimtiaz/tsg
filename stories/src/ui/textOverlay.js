@@ -168,6 +168,10 @@ function ensureFabric() {
     }
     fabricManager.calcOffset();
     
+    // Enable immediate dragging without double-click
+    canvas.selection = false; // Disable area selection
+    canvas.skipTargetFind = false;
+    
     setupFabricEventListeners(canvas);
 }
 
@@ -191,7 +195,8 @@ function getTextboxDefaults() {
         splitByGrapheme: TEXTBOX_DEFAULTS.SPLIT_BY_GRAPHEME,
         breakWords: TEXTBOX_DEFAULTS.BREAK_WORDS,
         originX: TEXTBOX_DEFAULTS.ORIGIN_X,
-        originY: TEXTBOX_DEFAULTS.ORIGIN_Y
+        originY: TEXTBOX_DEFAULTS.ORIGIN_Y,
+
     };
 }
 
