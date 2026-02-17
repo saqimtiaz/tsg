@@ -128,6 +128,14 @@ function setupFabricEventListeners(canvas) {
     const syncEvents = ['object:modified', 'object:scaling', 'object:moving', 'object:changed'];
     syncEvents.forEach(event => canvas.on(event, syncObjectsToState));
     
+    // Clear snap guides when mouse is released
+    canvas.on('mouse:up', () => {
+        if (snapGuideLines.length > 0) {
+            clearSnapGuides();
+            canvas.renderAll();
+        }
+    });
+    
     // Pointer forwarding for image manipulation
     canvas.on('mouse:down', forwardPointerEvent('pointerdown'));
     canvas.on('mouse:move', forwardPointerEvent('pointermove'));
@@ -229,8 +237,57 @@ function createRectSyncFunction(textbox, rect, box) {
             width: Math.round(currentW + pad * 2),
             height: Math.round(currentH + pad * 2)
         });
-        rect.sendToBack?.();
+        rect.setCoords();
     };
+}
+
+/* ================= SNAP GUIDES ================= */
+let snapGuideLines = [];
+let currentSnapState = { horizontal: false, vertical: false };
+
+function clearSnapGuides() {
+    const canvas = fabricManager?.getCanvas();
+    if (!canvas || snapGuideLines.length === 0) return;
+    
+    // Remove all snap guide lines from canvas
+    snapGuideLines.forEach(line => canvas.remove(line));
+    snapGuideLines = [];
+    currentSnapState = { horizontal: false, vertical: false };
+}
+
+function drawSnapGuide(orientation, position) {
+    const canvas = fabricManager?.getCanvas();
+    if (!canvas) return;
+    
+    const { Line } = window.fabric;
+    const canvasWidth = canvas.width;
+    const canvasHeight = canvas.height;
+    
+    let line;
+    if (orientation === 'vertical') {
+        // Vertical line at horizontal center
+        line = new Line([position, 0, position, canvasHeight], {
+            stroke: '#00ff00',
+            strokeWidth: 2,
+            strokeDashArray: [8, 8],
+            selectable: false,
+            evented: false,
+            __isSnapGuide: true
+        });
+    } else {
+        // Horizontal line at vertical center
+        line = new Line([0, position, canvasWidth, position], {
+            stroke: '#00ff00',
+            strokeWidth: 2,
+            strokeDashArray: [8, 8],
+            selectable: false,
+            evented: false,
+            __isSnapGuide: true
+        });
+    }
+    
+    canvas.add(line);
+    snapGuideLines.push(line);
 }
 
 function handleTextboxMove(textbox, box, syncRect) {
@@ -249,9 +306,45 @@ function handleTextboxMove(textbox, box, syncRect) {
     textbox.left = Math.max(pad, Math.min(canvasWidth - pad - objWidth, textbox.left));
     textbox.top = Math.max(pad, Math.min(canvasHeight - pad - objHeight, textbox.top));
     
+    // Check for center alignment and snap
+    const centerX = canvasWidth / 2;
+    const centerY = canvasHeight / 2;
+    const snapThreshold = 10; // Fixed threshold
+    
+    const textboxCenterX = textbox.left + objWidth / 2;
+    const textboxCenterY = textbox.top + objHeight / 2;
+    
+    const isHorizontallyCentered = Math.abs(textboxCenterX - centerX) < snapThreshold;
+    const isVerticallyCentered = Math.abs(textboxCenterY - centerY) < snapThreshold;
+    
+    // Apply snapping
+    if (isHorizontallyCentered) {
+        textbox.left = centerX - objWidth / 2;
+    }
+    
+    if (isVerticallyCentered) {
+        textbox.top = centerY - objHeight / 2;
+    }
+    
+    // Update guides only if state changed
+    if (currentSnapState.horizontal !== isHorizontallyCentered || 
+        currentSnapState.vertical !== isVerticallyCentered) {
+        
+        clearSnapGuides();
+        
+        if (isHorizontallyCentered) {
+            drawSnapGuide('vertical', centerX);
+        }
+        if (isVerticallyCentered) {
+            drawSnapGuide('horizontal', centerY);
+        }
+        
+        currentSnapState.horizontal = isHorizontallyCentered;
+        currentSnapState.vertical = isVerticallyCentered;
+    }
+    
     textbox.setCoords();
     syncRect();
-    fabricManager.renderAll();
 }
 
 function handleTextboxScale(textbox, box, syncRect) {
@@ -304,7 +397,11 @@ function setupTextboxEventHandlers(textbox, rect, box) {
     
     textbox.on('moving', () => handleTextboxMove(textbox, box, syncRect));
     textbox.on('scaling', () => handleTextboxScale(textbox, box, syncRect));
-    textbox.on('modified', () => { syncRect(); syncObjectsToState(); fabricManager.renderAll(); });
+    textbox.on('modified', () => { 
+        syncRect(); 
+        syncObjectsToState(); 
+        fabricManager.renderAll(); 
+    });
     textbox.on('changed', () => { syncRect(); syncObjectsToState(); fabricManager.renderAll(); });
     textbox.on('editing:entered', handleEditingEntered);
     textbox.on('editing:exited', handleEditingExited);

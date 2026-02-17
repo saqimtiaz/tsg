@@ -5,23 +5,18 @@
     (check what other fonts we usually use)
     Open sans
     Montserrat
-- Color picker UI
-	- including predefined custom colors
-	- https://github.com/sefianecho/alwan
-	- https://github.com/mdbassit/Coloris
+- include predefined custom colors
+
 
 
 ## Future
-- refactor toasts and export.js and share them between both apps
 - improve upgradeability of both apps, see section below.
-
 - only show text controls toggle when textbox selected?
-
+- refactor toasts and export.js and share them between both apps
+- 
 ---
 
 ## Check:
-Manifest errors ?
-    Manifest: Line: 1, column: 1, Syntax error.
 Saving:
     - currently only download on mobile but might be because it needs https
 Sharing:
