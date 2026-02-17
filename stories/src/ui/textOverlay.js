@@ -243,7 +243,7 @@ function createRectSyncFunction(textbox, rect, box) {
 
 /* ================= SNAP GUIDES ================= */
 let snapGuideLines = [];
-let currentSnapState = { horizontal: false, vertical: false };
+let currentSnapState = { horizontal: false, vertical: false, alignmentCount: 0 };
 
 function clearSnapGuides() {
     const canvas = fabricManager?.getCanvas();
@@ -252,7 +252,7 @@ function clearSnapGuides() {
     // Remove all snap guide lines from canvas
     snapGuideLines.forEach(line => canvas.remove(line));
     snapGuideLines = [];
-    currentSnapState = { horizontal: false, vertical: false };
+    currentSnapState = { horizontal: false, vertical: false, alignmentCount: 0 };
 }
 
 function drawSnapGuide(orientation, position) {
@@ -314,24 +314,67 @@ function handleTextboxMove(textbox, box, syncRect) {
     const textboxCenterX = textbox.left + objWidth / 2;
     const textboxCenterY = textbox.top + objHeight / 2;
     
-    const isHorizontallyCentered = Math.abs(textboxCenterX - centerX) < snapThreshold;
-    const isVerticallyCentered = Math.abs(textboxCenterY - centerY) < snapThreshold;
+    let isHorizontallyCentered = false;
+    let isVerticallyCentered = false;
+    let alignmentGuides = []; // Store alignment guide positions
     
-    // Apply snapping
-    if (isHorizontallyCentered) {
+    // Canvas center snap
+    if (Math.abs(textboxCenterX - centerX) < snapThreshold) {
         textbox.left = centerX - objWidth / 2;
+        isHorizontallyCentered = true;
     }
     
-    if (isVerticallyCentered) {
+    if (Math.abs(textboxCenterY - centerY) < snapThreshold) {
         textbox.top = centerY - objHeight / 2;
+        isVerticallyCentered = true;
     }
     
-    // Update guides only if state changed
-    if (currentSnapState.horizontal !== isHorizontallyCentered || 
-        currentSnapState.vertical !== isVerticallyCentered) {
+    // Check alignment with other textboxes
+    const otherTextboxes = canvas.getObjects().filter(obj => 
+        obj.type === 'textbox' && obj.__boxId !== textbox.__boxId
+    );
+    
+    otherTextboxes.forEach(other => {
+        const otherLeft = other.left;
+        const otherTop = other.top;
+        const otherCenterX = other.left + other.getScaledWidth() / 2;
+        const otherCenterY = other.top + other.getScaledHeight() / 2;
         
+        // Vertical alignment (same X coordinate)
+        // Check left edge
+        if (Math.abs(textbox.left - otherLeft) < snapThreshold) {
+            textbox.left = otherLeft;
+            alignmentGuides.push({ type: 'vertical', position: otherLeft });
+        }
+        // Check center X
+        else if (Math.abs(textboxCenterX - otherCenterX) < snapThreshold) {
+            textbox.left = otherCenterX - objWidth / 2;
+            alignmentGuides.push({ type: 'vertical', position: otherCenterX });
+        }
+        
+        // Horizontal alignment (same Y coordinate)
+        // Check top edge
+        if (Math.abs(textbox.top - otherTop) < snapThreshold) {
+            textbox.top = otherTop;
+            alignmentGuides.push({ type: 'horizontal', position: otherTop });
+        }
+        // Check center Y
+        else if (Math.abs(textboxCenterY - otherCenterY) < snapThreshold) {
+            textbox.top = otherCenterY - objHeight / 2;
+            alignmentGuides.push({ type: 'horizontal', position: otherCenterY });
+        }
+    });
+    
+    // Update guides
+    const needsUpdate = (currentSnapState.horizontal !== isHorizontallyCentered) || 
+                       (currentSnapState.vertical !== isVerticallyCentered) ||
+                       (alignmentGuides.length > 0) ||
+                       (currentSnapState.alignmentCount !== alignmentGuides.length);
+    
+    if (needsUpdate) {
         clearSnapGuides();
         
+        // Canvas center guides
         if (isHorizontallyCentered) {
             drawSnapGuide('vertical', centerX);
         }
@@ -339,8 +382,14 @@ function handleTextboxMove(textbox, box, syncRect) {
             drawSnapGuide('horizontal', centerY);
         }
         
+        // Alignment guides with other textboxes
+        alignmentGuides.forEach(guide => {
+            drawSnapGuide(guide.type, guide.position);
+        });
+        
         currentSnapState.horizontal = isHorizontallyCentered;
         currentSnapState.vertical = isVerticallyCentered;
+        currentSnapState.alignmentCount = alignmentGuides.length;
     }
     
     textbox.setCoords();
