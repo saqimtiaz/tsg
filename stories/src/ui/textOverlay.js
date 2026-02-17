@@ -335,33 +335,92 @@ function handleTextboxMove(textbox, box, syncRect) {
     );
     
     otherTextboxes.forEach(other => {
+        const otherBox = state.textBoxes.find(b => b.id === other.__boxId);
+        if (!otherBox) return;
+        
+        const otherPad = Number(otherBox.padding || 0);
+        const otherOffsetX = Number(otherBox.offsetX || 0);
+        const offsetX = Number(box.offsetX || 0);
+        
+        // Textbox positions
         const otherLeft = other.left;
         const otherTop = other.top;
         const otherCenterX = other.left + other.getScaledWidth() / 2;
         const otherCenterY = other.top + other.getScaledHeight() / 2;
         
+        // Rounded rectangle (background) positions - account for offsetX
+        const otherRectLeft = otherLeft - otherPad - otherOffsetX;
+        const otherRectTop = otherTop - otherPad;
+        const otherRectWidth = other.getScaledWidth() + otherPad * 2;
+        const otherRectHeight = other.getScaledHeight() + otherPad * 2;
+        const otherRectCenterX = otherRectLeft + otherRectWidth / 2 + otherOffsetX;
+        const otherRectCenterY = otherRectTop + otherRectHeight / 2;
+        const otherRectRight = otherRectLeft + otherRectWidth;
+        const otherRectBottom = otherRectTop + otherRectHeight;
+        
+        // Current textbox's rectangle positions - account for offsetX
+        const currentRectLeft = textbox.left - pad - offsetX;
+        const currentRectTop = textbox.top - pad;
+        const currentRectWidth = objWidth + pad * 2;
+        const currentRectHeight = objHeight + pad * 2;
+        const currentRectCenterX = currentRectLeft + currentRectWidth / 2 + offsetX;
+        const currentRectCenterY = currentRectTop + currentRectHeight / 2;
+        const currentRectRight = currentRectLeft + currentRectWidth;
+        const currentRectBottom = currentRectTop + currentRectHeight;
+        
         // Vertical alignment (same X coordinate)
-        // Check left edge
+        // Check textbox left edges
         if (Math.abs(textbox.left - otherLeft) < snapThreshold) {
             textbox.left = otherLeft;
             alignmentGuides.push({ type: 'vertical', position: otherLeft });
         }
-        // Check center X
+        // Check textbox center X
         else if (Math.abs(textboxCenterX - otherCenterX) < snapThreshold) {
             textbox.left = otherCenterX - objWidth / 2;
             alignmentGuides.push({ type: 'vertical', position: otherCenterX });
         }
+        // Check rectangle left edges
+        else if (Math.abs(currentRectLeft - otherRectLeft) < snapThreshold) {
+            textbox.left = otherRectLeft + pad + offsetX;
+            alignmentGuides.push({ type: 'vertical', position: otherRectLeft });
+        }
+        // Check rectangle center X
+        else if (Math.abs(currentRectCenterX - otherRectCenterX) < snapThreshold) {
+            const newRectLeft = otherRectCenterX - currentRectWidth / 2 - offsetX;
+            textbox.left = newRectLeft + pad + offsetX;
+            alignmentGuides.push({ type: 'vertical', position: otherRectCenterX });
+        }
+        // Check rectangle right edges
+        else if (Math.abs(currentRectRight - otherRectRight) < snapThreshold) {
+            textbox.left = otherRectRight - currentRectWidth + pad + offsetX;
+            alignmentGuides.push({ type: 'vertical', position: otherRectRight });
+        }
         
         // Horizontal alignment (same Y coordinate)
-        // Check top edge
+        // Check textbox top edges
         if (Math.abs(textbox.top - otherTop) < snapThreshold) {
             textbox.top = otherTop;
             alignmentGuides.push({ type: 'horizontal', position: otherTop });
         }
-        // Check center Y
+        // Check textbox center Y
         else if (Math.abs(textboxCenterY - otherCenterY) < snapThreshold) {
             textbox.top = otherCenterY - objHeight / 2;
             alignmentGuides.push({ type: 'horizontal', position: otherCenterY });
+        }
+        // Check rectangle top edges
+        else if (Math.abs(currentRectTop - otherRectTop) < snapThreshold) {
+            textbox.top = otherRectTop + pad;
+            alignmentGuides.push({ type: 'horizontal', position: otherRectTop });
+        }
+        // Check rectangle center Y
+        else if (Math.abs(currentRectCenterY - otherRectCenterY) < snapThreshold) {
+            textbox.top = otherRectCenterY - currentRectHeight / 2 + pad;
+            alignmentGuides.push({ type: 'horizontal', position: otherRectCenterY });
+        }
+        // Check rectangle bottom edges
+        else if (Math.abs(currentRectBottom - otherRectBottom) < snapThreshold) {
+            textbox.top = otherRectBottom - currentRectHeight + pad;
+            alignmentGuides.push({ type: 'horizontal', position: otherRectBottom });
         }
     });
     
