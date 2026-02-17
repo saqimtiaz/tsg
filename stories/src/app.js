@@ -5,7 +5,7 @@ import { addTextBox, exitTextMode, enterTextMode, renderTextBoxes } from "./ui/t
 import { toggleTextControls } from "./ui/textControls.js";
 import { initDB, saveProject, loadProject, clearProject, getSharedFiles } from "./data/db.js";
 import { exportImage, shareImage, canShareImage } from "./features/export.js";
-import { CANVAS_SIZES, INTERACTION_CONFIG, EXPORT_CONFIG } from "./config.js";
+import { CANVAS_SIZES, INTERACTION_CONFIG, EXPORT_CONFIG, CANVAS_BG_COLOR } from "./config.js";
 import { pickImageFile, loadImageFromFile } from "./utils/utils.js";
 import { AppEvents, onAppEvent } from "./events.js";
 import { dom } from "./domCache.js";
@@ -210,7 +210,7 @@ function drawCanvasOutline() {
 
 // Get canvas background color from state or default
 function getCanvasBackgroundColor() {
-	return state.canvasBackgroundColor || '#ffffff';
+	return state.canvasBackgroundColor || CANVAS_BG_COLOR;
 }
 
 function draw() {
@@ -461,7 +461,9 @@ function setupModeButtons() {
 	textModeBtn.addEventListener('click', () => {
 		enterTextMode();
 		textModeBtn.classList.add('active');
+		textModeBtn.classList.add('hidden');
 		imageModeBtn.classList.remove('active');
+		imageModeBtn.classList.remove('hidden');
 		
 		// Show text mode buttons, hide image mode buttons
 		textModeButtons?.classList.remove('hidden');
@@ -471,7 +473,9 @@ function setupModeButtons() {
 	imageModeBtn.addEventListener('click', () => {
 		exitTextMode();
 		imageModeBtn.classList.add('active');
+		imageModeBtn.classList.add('hidden');
 		textModeBtn.classList.remove('active');
+		textModeBtn.classList.remove('hidden');
 		
 		// Show image mode buttons, hide text mode buttons
 		imageModeButtons?.classList.remove('hidden');
@@ -483,8 +487,10 @@ function setupModeButtons() {
 	});
 	
 	toggleTextControlsBtn?.addEventListener('click', () => {
-		toggleTextControls();
-		toggleTextControlsBtn.classList.toggle('active');
+		const wasToggled = toggleTextControls();
+		if (wasToggled) {
+			toggleTextControlsBtn.classList.toggle('active');
+		}
 	});
 	
 	// Canvas background color picker
@@ -545,7 +551,7 @@ function setupResetButton() {
 			offsetY: 0
 		});
 		state.textBoxes = [];
-		state.canvasBackgroundColor = '#ffffff';
+		state.canvasBackgroundColor = CANVAS_BG_COLOR;
 		
 		draw();
 		
@@ -562,7 +568,9 @@ function setupResetButton() {
 		
 		exitTextMode();
 		imageModeBtn?.classList.add('active');
+		imageModeBtn?.classList.add('hidden');
 		textModeBtn?.classList.remove('active');
+		textModeBtn?.classList.remove('hidden');
 		
 		// Show image mode buttons, hide text mode buttons
 		imageModeButtons?.classList.remove('hidden');
@@ -570,7 +578,7 @@ function setupResetButton() {
 		
 		// Reset color picker
 		const canvasBgColorInput = dom.get('canvasBgColor');
-		if (canvasBgColorInput) canvasBgColorInput.value = '#ffffff';
+		if (canvasBgColorInput) canvasBgColorInput.value = CANVAS_BG_COLOR;
 	});
 }
 
@@ -634,65 +642,67 @@ async function restoreProject() {
 		const saved = await loadProject();
 		console.log('Loaded project:', saved);
 		
-		if (!saved?.image) {
-			console.log('No saved project, prompting for image');
-			promptImage();
+		if (!saved) {
+			console.log('No saved project');
 			return;
 		}
 		
-		const img = new Image();
-		img.onload = () => {
-			console.log('Image loaded');
-			
-			// Restore image state
-			Object.assign(state.image, {
-				img,
-				filename: saved.imageFilename || 'restored.jpg',
-				scale: saved.imageScale || 1,
-				offsetX: saved.imageOffsetX || 0,
-				offsetY: saved.imageOffsetY || 0
-			});
-			
-			// Restore canvas background color
-			if (saved.canvasBackgroundColor) {
-				state.canvasBackgroundColor = saved.canvasBackgroundColor;
-				const canvasBgColorInput = dom.get('canvasBgColor');
-				if (canvasBgColorInput) {
-					canvasBgColorInput.value = saved.canvasBackgroundColor;
-				}
+		// Restore canvas background color
+		if (saved.canvasBackgroundColor) {
+			state.canvasBackgroundColor = saved.canvasBackgroundColor;
+			const canvasBgColorInput = dom.get('canvasBgColor');
+			if (canvasBgColorInput) {
+				canvasBgColorInput.value = saved.canvasBackgroundColor;
 			}
+		}
+		
+		// Restore text boxes
+		if (saved.textBoxes?.length > 0) {
+			console.log('Restoring text boxes:', saved.textBoxes);
+			state.textBoxes = saved.textBoxes;
+			setTimeout(() => {
+				console.log('Calling renderTextBoxes...');
+				renderTextBoxes();
+			}, 300);
+		}
+		
+		// Restore image if available
+		if (saved.image) {
+			const img = new Image();
 			
-			draw();
-			
-			// Restore text boxes
-			console.log('Checking text boxes:', saved.textBoxes, 'length:', saved.textBoxes?.length);
-			if (saved.textBoxes?.length > 0) {
-				console.log('Restoring text boxes:', saved.textBoxes);
-				state.textBoxes = saved.textBoxes;
-				console.log('State updated with text boxes');
+			img.onload = () => {
+				console.log('Image loaded');
 				
-				setTimeout(() => {
-					console.log('Calling renderTextBoxes...');
-					renderTextBoxes();
-				}, 300);
-			} else {
-				console.log('No text boxes to restore');
-			}
+				// Restore image state
+				Object.assign(state.image, {
+					img,
+					filename: saved.imageFilename || 'restored.jpg',
+					scale: saved.imageScale || 1,
+					offsetX: saved.imageOffsetX || 0,
+					offsetY: saved.imageOffsetY || 0
+				});
+				
+				draw();
+				toast.success('Project restored', 2000);
+			};
 			
-			toast.success('Project restored', 2000);
-		};
-		
-		img.onerror = () => {
-			console.error('Failed to load saved image');
-			toast.error('Failed to restore project');
-			promptImage();
-		};
-		
-		img.src = saved.image;
+			img.onerror = () => {
+				console.error('Failed to load saved image');
+				toast.error('Failed to restore image');
+				draw(); // Still draw with background color and text boxes
+			};
+			
+			img.src = saved.image;
+		} else {
+			console.log('No image to restore');
+			draw(); // Draw with background color
+			if (saved.textBoxes?.length > 0 || saved.canvasBackgroundColor) {
+				toast.success('Project restored', 2000);
+			}
+		}
 	} catch (error) {
 		console.error('Failed to restore project:', error);
 		toast.error('Failed to restore project');
-		promptImage();
 	}
 }
 

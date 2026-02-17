@@ -18,11 +18,14 @@ export class AutosaveManager {
 	
 	save() {
 		const { img, filename, scale, offsetX, offsetY } = state.image;
-		if (!img) return;
 		
-		const imageData = this.captureImageData(img);
+		// Capture image data if available
+		const imageData = img ? this.captureImageData(img) : null;
 		
 		console.log('Autosaving with text boxes:', state.textBoxes);
+		console.log('Autosaving with background color:', state.canvasBackgroundColor);
+		console.log('Autosaving with image:', imageData ? 'yes' : 'no');
+		
 		saveProject({
 			image: imageData,
 			imageFilename: filename,

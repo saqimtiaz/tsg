@@ -544,10 +544,12 @@ export function toggleTextControls() {
         const textObj = getActiveTextbox();
         if (textObj) {
             showTextControls(textObj);
+            return true;
         }
-    } else {
+    } else if (isVisible) {
         // Hide controls
         hideTextControls();
+        return true;
     }
 }
 

@@ -32,7 +32,7 @@ export async function initDB() {
 }
 
 // Save project state
-export async function saveProject(state) {
+export async function saveProject(projectData) {
     if (!db) await initDB();
     
     return new Promise((resolve, reject) => {
@@ -41,13 +41,13 @@ export async function saveProject(state) {
         
         const data = {
             timestamp: Date.now(),
-            image: state.image, // base64 data URL
-            imageFilename: state.imageFilename,
-            imageScale: state.imageScale,
-            imageOffsetX: state.imageOffsetX,
-            imageOffsetY: state.imageOffsetY,
-            textBoxes: state.textBoxes,
-            canvasBackgroundColor: state.canvasBackgroundColor
+            image: projectData.image,
+            imageFilename: projectData.imageFilename,
+            imageScale: projectData.imageScale,
+            imageOffsetX: projectData.imageOffsetX,
+            imageOffsetY: projectData.imageOffsetY,
+            textBoxes: projectData.textBoxes,
+            canvasBackgroundColor: projectData.canvasBackgroundColor
         };
         
         const request = store.put(data, 'current');

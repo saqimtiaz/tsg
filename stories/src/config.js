@@ -7,6 +7,9 @@ export const CANVAS_SIZES = {
     '1440x1920': { width: 1440, height: 1920, label: '3:4' }
 };
 
+// Canvas background color
+export const CANVAS_BG_COLOR = '#aaaaaa';
+
 /* ================= INTERACTION CONFIG ================= */
 export const INTERACTION_CONFIG = {
     HOLD_DELAY: 1000,

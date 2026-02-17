@@ -5,11 +5,13 @@
     (check what other fonts we usually use)
     Open sans
     Montserrat
+- Color picker UI
+	- including predefined custom colors
 
 ## Future
 - refactor toasts and export.js and share them between both apps
 - improve upgradeability of both apps, see section below.
-- Color picker UI
+
 - only show text controls toggle when textbox selected?
 
 ---

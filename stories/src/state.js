@@ -1,4 +1,6 @@
 /* ================= STATE ================= */
+import { CANVAS_BG_COLOR } from './config.js';
+
 export const state = {
 	image: {
 		img: null,
@@ -8,7 +10,7 @@ export const state = {
 		offsetY: 0
 	},
 	textBoxes: [],
-	canvasBackgroundColor: '#ffffff',
+	canvasBackgroundColor: CANVAS_BG_COLOR,
 	activeTextBoxId: null
 };
 
