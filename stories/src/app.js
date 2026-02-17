@@ -1,6 +1,6 @@
 
 /* ================= IMPORTS ================= */
-import { state, subscribeToState, updateImage, setImage, resetImage } from './state.js';
+import { state, subscribeToState, updateImage, setImage, resetImage, setCanvasBackgroundColor } from './state.js';
 import { addTextBox, exitTextMode, enterTextMode, renderTextBoxes } from "./ui/textOverlay.js";
 import { toggleTextControls } from "./ui/textControls.js";
 import { initDB, saveProject, loadProject, clearProject, getSharedFiles } from "./data/db.js";
@@ -208,8 +208,15 @@ function drawCanvasOutline() {
 	ctx.restore();
 }
 
+// Get canvas background color from state or default
+function getCanvasBackgroundColor() {
+	return state.canvasBackgroundColor || '#ffffff';
+}
+
 function draw() {
-	ctx.clearRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
+	// Fill canvas with background color
+	ctx.fillStyle = getCanvasBackgroundColor();
+	ctx.fillRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
 	
 	if (!drawImage()) {
 		drawCanvasOutline();
@@ -244,9 +251,6 @@ function pickFile(cb) {
 function handleImageLoad(img, name) {
 	setImage(img, name, CANVAS_WIDTH, CANVAS_HEIGHT);
 	draw();
-	
-	const textModeBtn = dom.get('textModeBtn');
-	if (textModeBtn) textModeBtn.disabled = false;
 }
 
 function promptImage() {
@@ -447,23 +451,21 @@ function setupWindowEventListeners() {
 function setupModeButtons() {
 	const textModeBtn = dom.get('textModeBtn');
 	const imageModeBtn = dom.get('imageModeBtn');
+	const imageModeButtons = dom.get('imageModeButtons');
+	const textModeButtons = dom.get('textModeButtons');
 	const addNewTextBtn = dom.get('addNewTextBtn');
-	const addTextBtnSeparator = dom.get('addTextBtnSeparator');
 	const toggleTextControlsBtn = dom.get('toggleTextControlsBtn');
-	
-	// Initially disable text mode until image selected
-	textModeBtn.disabled = true;
+	const canvasBgColorBtn = dom.get('canvasBgColorBtn');
+	const canvasBgColorInput = dom.get('canvasBgColor');
 	
 	textModeBtn.addEventListener('click', () => {
-		if (textModeBtn.disabled) return;
-		
 		enterTextMode();
 		textModeBtn.classList.add('active');
 		imageModeBtn.classList.remove('active');
 		
-		addNewTextBtn.classList.remove('hidden');
-		toggleTextControlsBtn.classList.remove('hidden');
-		addTextBtnSeparator.classList.remove('hidden');
+		// Show text mode buttons, hide image mode buttons
+		textModeButtons?.classList.remove('hidden');
+		imageModeButtons?.classList.add('hidden');
 	});
 	
 	imageModeBtn.addEventListener('click', () => {
@@ -471,19 +473,31 @@ function setupModeButtons() {
 		imageModeBtn.classList.add('active');
 		textModeBtn.classList.remove('active');
 		
-		addNewTextBtn.classList.add('hidden');
-		toggleTextControlsBtn.classList.add('hidden');
-		addTextBtnSeparator.classList.add('hidden');
+		// Show image mode buttons, hide text mode buttons
+		imageModeButtons?.classList.remove('hidden');
+		textModeButtons?.classList.add('hidden');
 	});
 	
-	addNewTextBtn.addEventListener('click', async () => {
+	addNewTextBtn?.addEventListener('click', async () => {
 		await addTextBox();
 	});
 	
-	toggleTextControlsBtn.addEventListener('click', () => {
+	toggleTextControlsBtn?.addEventListener('click', () => {
 		toggleTextControls();
 		toggleTextControlsBtn.classList.toggle('active');
 	});
+	
+	// Canvas background color picker
+	if (canvasBgColorBtn && canvasBgColorInput) {
+		canvasBgColorBtn.addEventListener('click', () => {
+			canvasBgColorInput.click();
+		});
+		
+		canvasBgColorInput.addEventListener('input', (e) => {
+			setCanvasBackgroundColor(e.target.value); // Use state helper to trigger autosave
+			draw(); // Redraw canvas with new background color
+		});
+	}
 }
 
 function setupSizeButton() {
@@ -531,6 +545,7 @@ function setupResetButton() {
 			offsetY: 0
 		});
 		state.textBoxes = [];
+		state.canvasBackgroundColor = '#ffffff';
 		
 		draw();
 		
@@ -539,13 +554,23 @@ function setupResetButton() {
 			window.__fabricCanvas.clear();
 		}
 		
-		// Disable text mode
+		// Switch to image mode and disable text mode
 		const textModeBtn = dom.get('textModeBtn');
 		const imageModeBtn = dom.get('imageModeBtn');
-		if (textModeBtn) textModeBtn.disabled = true;
+		const imageModeButtons = dom.get('imageModeButtons');
+		const textModeButtons = dom.get('textModeButtons');
+		
 		exitTextMode();
 		imageModeBtn?.classList.add('active');
 		textModeBtn?.classList.remove('active');
+		
+		// Show image mode buttons, hide text mode buttons
+		imageModeButtons?.classList.remove('hidden');
+		textModeButtons?.classList.add('hidden');
+		
+		// Reset color picker
+		const canvasBgColorInput = dom.get('canvasBgColor');
+		if (canvasBgColorInput) canvasBgColorInput.value = '#ffffff';
 	});
 }
 
@@ -628,10 +653,16 @@ async function restoreProject() {
 				offsetY: saved.imageOffsetY || 0
 			});
 			
-			draw();
+			// Restore canvas background color
+			if (saved.canvasBackgroundColor) {
+				state.canvasBackgroundColor = saved.canvasBackgroundColor;
+				const canvasBgColorInput = dom.get('canvasBgColor');
+				if (canvasBgColorInput) {
+					canvasBgColorInput.value = saved.canvasBackgroundColor;
+				}
+			}
 			
-			const textModeBtn = dom.get('textModeBtn');
-			if (textModeBtn) textModeBtn.disabled = false;
+			draw();
 			
 			// Restore text boxes
 			console.log('Checking text boxes:', saved.textBoxes, 'length:', saved.textBoxes?.length);

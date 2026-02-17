@@ -210,14 +210,27 @@
 			<button id="textModeBtn" class="mode-btn" title="Text Mode">
 				<span data-icon="textMode"></span>
 			</button>
-			<div id="addTextBtnSeparator" class="hidden"></div>
-			<button id="addNewTextBtn" class="mode-btn hidden" title="Add Text Box">
+		</div>
+		
+		<!-- Image/Text mode specific buttons -->
+		<!-- Image mode buttons -->
+		<div id="imageModeButtons" class="mode-buttons-container control-group">
+			<button id="canvasBgColorBtn" class="mode-btn" title="Canvas Background Color">
+				<input type="color" id="canvasBgColor" value="#ffffff" style="opacity: 0; position: absolute; pointer-events: none;">
+				<span data-icon="bgColor"></span>
+			</button>
+		</div>
+		
+		<!-- Text mode buttons -->
+		<div id="textModeButtons" class="mode-buttons-container hidden control-group">
+			<button id="addNewTextBtn" class="mode-btn" title="Add Text Box">
 				<span data-icon="addText"></span>
 			</button>
-			<button id="toggleTextControlsBtn" class="mode-btn hidden" title="Toggle Text Controls">
+			<button id="toggleTextControlsBtn" class="mode-btn" title="Toggle Text Controls">
 				<span data-icon="toggleControls"></span>
 			</button>
 		</div>
+
 		<!-- Settings group (right) -->
 		<div class="control-group">
 			<button id="resetBtn" class="mode-btn reset-btn" title="Reset App">

@@ -46,7 +46,8 @@ export async function saveProject(state) {
             imageScale: state.imageScale,
             imageOffsetX: state.imageOffsetX,
             imageOffsetY: state.imageOffsetY,
-            textBoxes: state.textBoxes
+            textBoxes: state.textBoxes,
+            canvasBackgroundColor: state.canvasBackgroundColor
         };
         
         const request = store.put(data, 'current');

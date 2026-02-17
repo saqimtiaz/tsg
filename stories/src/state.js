@@ -8,6 +8,7 @@ export const state = {
 		offsetY: 0
 	},
 	textBoxes: [],
+	canvasBackgroundColor: '#ffffff',
 	activeTextBoxId: null
 };
 
@@ -117,9 +118,18 @@ export function resetImage(canvasWidth, canvasHeight) {
     if (!img) return;
     
     const scale = Math.max(canvasWidth / img.width, canvasHeight / img.height);
-    const offsetX = (canvasWidth - img.width * scale) / 2;
+    const offsetX = (canvasWidth / img.width * scale) / 2;
     const offsetY = (canvasHeight - img.height * scale) / 2;
     
     Object.assign(state.image, { scale, offsetX, offsetY });
+    notifyStateChange();
+}
+
+/**
+ * Update canvas background color and notify listeners
+ * @param {string} color - Hex color string
+ */
+export function setCanvasBackgroundColor(color) {
+    state.canvasBackgroundColor = color;
     notifyStateChange();
 }

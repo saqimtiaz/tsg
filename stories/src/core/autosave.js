@@ -29,7 +29,8 @@ export class AutosaveManager {
 			imageScale: scale,
 			imageOffsetX: offsetX,
 			imageOffsetY: offsetY,
-			textBoxes: JSON.parse(JSON.stringify(state.textBoxes))
+			textBoxes: JSON.parse(JSON.stringify(state.textBoxes)),
+			canvasBackgroundColor: state.canvasBackgroundColor
 		}).then(() => {
 			console.log('Autosave complete');
 		}).catch(err => {

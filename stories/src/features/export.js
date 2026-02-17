@@ -228,8 +228,13 @@ function createExportCanvas(baseCanvas, CANVAS_WIDTH, CANVAS_HEIGHT) {
 	// Ensure high quality for export
 	exportCtx.imageSmoothingEnabled = true;
 	exportCtx.imageSmoothingQuality = "high";
+	
+	// Fill with background color first
+	const bgColor = state.canvasBackgroundColor || '#ffffff';
+	exportCtx.fillStyle = bgColor;
+	exportCtx.fillRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
 
-	// Draw base image
+	// Draw base image on top of background
 	exportCtx.drawImage(baseCanvas, 0, 0);
 	
 	// Draw fabric/text canvas on top at native resolution
