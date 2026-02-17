@@ -125,13 +125,7 @@ export function setImage(img, filename, canvasWidth, canvasHeight) {
     const offsetX = (canvasWidth - img.width * scale) / 2;
     const offsetY = (canvasHeight - img.height * scale) / 2;
     
-    Object.assign(state.image, {
-        img,
-        filename,
-        scale,
-        offsetX,
-        offsetY
-    });
+    Object.assign(state.image, { img, filename, scale, offsetX, offsetY });
     notifyStateChange();
 }
 
@@ -144,8 +138,9 @@ export function resetImage(canvasWidth, canvasHeight) {
     const { img } = state.image;
     if (!img) return;
     
+    // Use same calculation as setImage
     const scale = Math.max(canvasWidth / img.width, canvasHeight / img.height);
-    const offsetX = (canvasWidth / img.width * scale) / 2;
+    const offsetX = (canvasWidth - img.width * scale) / 2;
     const offsetY = (canvasHeight - img.height * scale) / 2;
     
     Object.assign(state.image, { scale, offsetX, offsetY });

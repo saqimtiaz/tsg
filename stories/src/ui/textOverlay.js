@@ -273,7 +273,7 @@ function drawSnapGuide(orientation, position) {
         // Vertical line at horizontal center
         line = new Line([position, 0, position, canvasHeight], {
             stroke: '#00ff00',
-            strokeWidth: 2,
+            strokeWidth: 4,
             strokeDashArray: [8, 8],
             selectable: false,
             evented: false,
@@ -283,7 +283,7 @@ function drawSnapGuide(orientation, position) {
         // Horizontal line at vertical center
         line = new Line([0, position, canvasWidth, position], {
             stroke: '#00ff00',
-            strokeWidth: 2,
+            strokeWidth: 4,
             strokeDashArray: [8, 8],
             selectable: false,
             evented: false,
