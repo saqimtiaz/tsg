@@ -341,6 +341,22 @@ function createBoxObjects(box) {
     
     setupTextboxEventHandlers(textbox, rect, box);
     
+    // Force textbox to calculate its dimensions
+    textbox.initDimensions();
+    textbox.setCoords();
+    
+    // Sync rect to match textbox after initialization
+    const pad = Number(box.padding || 0);
+    const currentW = textbox.getScaledWidth?.() || (textbox.width * (textbox.scaleX || 1));
+    const currentH = textbox.getScaledHeight?.() || (textbox.height * (textbox.scaleY || 1));
+    
+    rect.set({
+        left: Math.round(textbox.left - pad),
+        top: Math.round(textbox.top - pad),
+        width: Math.round(currentW + pad * 2),
+        height: Math.round(currentH + pad * 2)
+    });
+    
     return { rect, it: textbox };
 }
 
@@ -373,7 +389,19 @@ export async function addTextBox() {
     
     // Add to state (triggers autosave via state notification)
     addTextBoxToState(box);
-    renderTextBoxes();
+    await renderTextBoxes();
+    
+    // Focus and enter editing mode on the newly created textbox
+    const canvas = fabricManager?.getCanvas();
+    if (canvas) {
+        const newTextbox = canvas.getObjects().find(obj => obj.__boxId === box.id && obj.type === 'textbox');
+        if (newTextbox) {
+            canvas.setActiveObject(newTextbox);
+            newTextbox.enterEditing();
+            newTextbox.selectAll();
+            canvas.renderAll();
+        }
+    }
 }
 
 export function enterTextMode() {
@@ -426,7 +454,7 @@ export function renderTextBoxes() {
     ensureFabric();
     if (!fabricManager?.isInitialized()) {
         console.warn('Fabric canvas not initialized!');
-        return;
+        return Promise.resolve();
     }
     
     // Load all fonts used in textboxes before rendering
@@ -435,7 +463,7 @@ export function renderTextBoxes() {
         ? fontsToLoad.map(font => document.fonts.load(`16px ${font}`).catch(() => {}))
         : [];
     
-    Promise.all(fontLoadPromises).then(() => {
+    return Promise.all(fontLoadPromises).then(() => {
         fabricManager.clear();
 
         console.log('Rendering text boxes:', state.textBoxes.length);
@@ -453,7 +481,9 @@ export function renderTextBoxes() {
             rect.setCoords();
         });
 
+        // Render once to ensure proper layout
         fabricManager.renderAll();
+        
         console.log('Fabric objects after render:', fabricManager.getObjects().length);
     });
 }

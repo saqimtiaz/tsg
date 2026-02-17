@@ -43,7 +43,7 @@ export default defineConfig({
 
       manifest: {
         "name": "TSG Stories",
-        "short_name": "TSG stories",
+        "short_name": "TSG Stories",
         "start_url": "/tsg/stories/",
         "scope": "/tsg/stories/",
         "display": "standalone",
