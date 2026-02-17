@@ -7,6 +7,8 @@ import "./styles/buttons.css";
 import "./styles/text-controls.css";
 import "./styles/icons.css";
 import './styles/toast.css';
+import './vendor/alwan/alwan.min.css';
+import './styles/alwan-custom.css';
 
 // main.js
 

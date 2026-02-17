@@ -1,0 +1,6 @@
+@layer components {
+    .alwan__popover-container {
+        position: relative;
+        z-index: 99;
+    }
+}

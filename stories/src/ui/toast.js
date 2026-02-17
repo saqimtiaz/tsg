@@ -116,7 +116,7 @@ function escapeHtml(text) {
 /**
  * Convenience methods for different types
  */
-const DEFAULT_TOAST_DURATION = 2500;
+const DEFAULT_TOAST_DURATION = 1500;
 
 export const toast = {
 	success: (message, duration = DEFAULT_TOAST_DURATION) =>

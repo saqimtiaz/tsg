@@ -5,13 +5,14 @@ import { addTextBox, exitTextMode, enterTextMode, renderTextBoxes } from "./ui/t
 import { toggleTextControls } from "./ui/textControls.js";
 import { initDB, saveProject, loadProject, clearProject, getSharedFiles } from "./data/db.js";
 import { exportImage, shareImage, canShareImage } from "./features/export.js";
-import { CANVAS_SIZES, INTERACTION_CONFIG, EXPORT_CONFIG, CANVAS_BG_COLOR, CANVAS_STROKE_COLOR  } from "./config.js";
+import { CANVAS_SIZES, INTERACTION_CONFIG, EXPORT_CONFIG, CANVAS_BG_COLOR, CANVAS_STROKE_COLOR, COLORS  } from "./config.js";
 import { pickImageFile, loadImageFromFile } from "./utils/utils.js";
 import { AppEvents, onAppEvent } from "./events.js";
 import { dom } from "./domCache.js";
 import { autosaveManager } from './core/autosave.js';
 import { setButtonIcon } from './ui/icons.js';
 import { toast } from './ui/toast.js';
+import Alwan from './vendor/alwan/alwan.min.js';
 
 let CANVAS_WIDTH = 1080;
 let CANVAS_HEIGHT = 1920;
@@ -489,18 +490,27 @@ function setupModeButtons() {
 			toggleTextControlsBtn.classList.toggle('active');
 		}
 	});
-	
-	// Canvas background color picker
-	if (canvasBgColorBtn && canvasBgColorInput) {
-		canvasBgColorBtn.addEventListener('click', () => {
-			canvasBgColorInput.click();
-		});
-		
-		canvasBgColorInput.addEventListener('input', (e) => {
-			setCanvasBackgroundColor(e.target.value); // Use state helper to trigger autosave
-			draw(); // Redraw canvas with new background color
-		});
-	}
+	Alwan.setDefaults({
+		swatches: [
+			...COLORS.BACKGROUND
+		],
+	});
+	const alwan = new Alwan(canvasBgColorBtn,{
+		preset:false,
+		inputs: {rgb: true},
+		preview: false,
+		copy: false
+	});
+	alwan.on("open", (ev) => {
+		alwan.setColor(state.canvasBackgroundColor);
+
+	});
+	alwan.on("color", (color) => {
+		setCanvasBackgroundColor(color.hex); // Use state helper to trigger autosave
+		//alwan.removeSwatches(alwan.config.swatches.length -1); //causes flashing via re-rendering, not updated dynamically
+		//alwan.addSwatches(color.hex); //TODO: persist alwan.config.swatches in state and restore after reload
+		draw(); // Redraw canvas with new background color
+	});
 }
 
 function setupSizeButton() {

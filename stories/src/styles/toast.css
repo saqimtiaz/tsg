@@ -1,7 +1,7 @@
 /* Toast Notifications */
 .toast-container {
 	position: fixed;
-	bottom: 80px;
+	bottom: 200px;
 	left: 50%;
 	transform: translateX(-50%);
 	z-index: 10000;
