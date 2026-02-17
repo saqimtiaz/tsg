@@ -385,12 +385,22 @@ async function setupButtonHandlers() {
             if (font) setTextboxProperty('fontFamily', font);
         });
     });
-    
-    
-    setupTextColorPanel();
-    
-    // Background color panel - add color picker
-    setupBgColorPanel();
+
+    setupColorPanel('textColorPanel', COLORS.TEXT, 
+        function(box){return box.color }, 
+        function(color){
+            setTextboxProperty('fill', color.hex || color);
+        }
+    );
+
+    setupColorPanel('bgColorPanel', COLORS.BACKGROUND, 
+        function(box){return box.background}, 
+        function(color){
+            handleBgColorChange(color.hex || color);
+            if(color.rgb)
+                handleBgOpacityChange(color.rgb.a);
+        }
+    );
     
     document.querySelectorAll('#bgOpacityPanel button').forEach(btn => {
         btn.addEventListener('click', () => {
@@ -408,10 +418,10 @@ async function setupButtonHandlers() {
     await populateFontPanel();
 }
 
-function setupTextColorPanel() {
-    const panel = document.getElementById('textColorPanel');
+function setupColorPanel(panelID, colors, loadFn, saveFn) {
+    const panel = document.getElementById(panelID);
     if (!panel) return;
-    
+
     // Create color picker if it doesn't exist
     let pickerBtn = panel.querySelector('.picker-btn');
     if (!pickerBtn) {
@@ -421,11 +431,11 @@ function setupTextColorPanel() {
         const swatches = document.createElement('div');
         swatches.className = 'swatches';
         
-        COLORS.TEXT.forEach(color => {
+        colors.forEach(color => {
             const btn = document.createElement('button');
             btn.style.setProperty('--c', color);
             btn.addEventListener('click', () => {
-                handleBgColorChange(color);
+                saveFn(color);
             });
             swatches.appendChild(btn);
         });
@@ -435,7 +445,7 @@ function setupTextColorPanel() {
 
         const alwan = new Alwan(pickerBtn, {
             swatches: [
-                ...COLORS.TEXT
+                ...colors
             ],
             preset:false,
             inputs: {rgb: true},
@@ -448,63 +458,14 @@ function setupTextColorPanel() {
             const box = state.textBoxes.find(b => b.id === currentTextObject?.__boxId);
             if (box) {
                 // Set color with current opacity
-                alwan.setColor(box.color);
+                alwan.setColor(loadFn(box));
             }
         });
         alwan.on("color", (color) => {
-            setTextboxProperty('fill', color.hex);
+            saveFn(color);
         });
-    }
-}
+    }    
 
-function setupBgColorPanel() {
-    const bgColorPanel = document.getElementById('bgColorPanel');
-    if (!bgColorPanel) return;
-    
-    // Create color picker if it doesn't exist
-    let pickerBtn = bgColorPanel.querySelector('.picker-btn');
-    if (!pickerBtn) {
-        pickerBtn = document.createElement('button');
-        pickerBtn.className = 'picker-btn';
-        pickerBtn.textContent = 'Custom…';
-
-        const swatches = document.createElement('div');
-        swatches.className = 'swatches';
-        COLORS.BACKGROUND.forEach(color => {
-            const btn = document.createElement('button');
-            btn.style.setProperty('--c', color);
-            btn.addEventListener('click', () => {
-                handleBgColorChange(color);
-            });
-            swatches.appendChild(btn);
-        });
-
-        bgColorPanel.appendChild(swatches);
-        bgColorPanel.appendChild(pickerBtn);
-
-        const alwan = new Alwan(pickerBtn, {
-            swatches: [
-                ...COLORS.BACKGROUND
-            ],
-            preset:false,
-            inputs: {rgb: true},
-            preview: false,
-            copy: false,/*
-            popover: false,
-            target: "#bgColorPanel .swatches"*/
-        })
-        alwan.on("open", (ev) => {
-            const box = state.textBoxes.find(b => b.id === currentTextObject?.__boxId);
-            if (box) {
-                // Set color with current opacity
-                alwan.setColor(box.background);
-            }
-        });
-        alwan.on("color", (color) => {
-            handleBgColorChange(color.hex);
-            handleBgOpacityChange(color.rgb.a);
-        });
-    }
 }
 
 async function populateFontPanel() {
