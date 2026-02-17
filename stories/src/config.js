@@ -42,7 +42,7 @@ export const TEXT_DEFAULTS = {
     BACKGROUND: '#1a1a1a',
     BACKGROUND_OPACITY: 0.6,
     PADDING: 45,
-    RADIUS: 24,
+    RADIUS: 20,
     LINE_HEIGHT: 1.5,
     TEXT_ALIGN: 'left',
     CHAR_SPACING: 0,
@@ -59,6 +59,7 @@ export const PRESET_VALUES = {
     LINE_HEIGHTS: [1.1, 1.2, 1.3, 1.4, 1.5, 1.6],
     CHAR_SPACINGS: [-50, -25, 0, 25, 50, 75, 100, 150, 200],
     PADDINGS: [30, 35, 45, 50, 55],
+    RADIUSES: [0, 10, 15, 20, 25],
     OFFSETS: [-10, -5, 0, 5, 10, 15, 20],
     BG_OPACITIES: [0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0]
 };

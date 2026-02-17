@@ -20,6 +20,7 @@ import bgColorIcon from '../assets/icons/bg-color.svg?raw';
 import bgOpacityIcon from '../assets/icons/bg-opacity.svg?raw';
 import paddingIcon from '../assets/icons/padding.svg?raw';
 import offsetIcon from '../assets/icons/offset.svg?raw';
+import radiusIcon from '../assets/icons/radius.svg?raw';
 
 // Map icon names to imported SVG strings
 export const icons = {
@@ -43,7 +44,8 @@ export const icons = {
   bgColor: bgColorIcon,
   bgOpacity: bgOpacityIcon,
   padding: paddingIcon,
-  offset: offsetIcon
+  offset: offsetIcon,
+  radius: radiusIcon
 };
 
 /**

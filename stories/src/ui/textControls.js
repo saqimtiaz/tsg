@@ -136,6 +136,7 @@ const panels = {
     charSpacing: new ControlPanel('charSpacingButton', 'charSpacingPanel'),
     textAlign: new ControlPanel('textAlignButton', 'textAlignPanel'),
     padding: new ControlPanel('paddingButton', 'paddingPanel'),
+    radius: new ControlPanel('radiusButton', 'radiusPanel'),
     offset: new ControlPanel('offsetButton', 'offsetPanel')
 };
 
@@ -205,6 +206,22 @@ function handleOffsetChange(value) {
     });
 }
 
+function handleRadiusChange(value) {
+    updateComplexProperty('radius', value, (textbox, box, val) => {
+        box.radius = val;
+        
+        const rect = ensureFabricCanvas()?.getObjects().find(
+            obj => obj.type === 'rect' && obj.__boxId === box.id
+        );
+        if (rect) {
+            rect.set({
+                rx: val,
+                ry: val
+            });
+        }
+    });
+}
+
 function handleBgColorChange(color) {
     updateComplexProperty('bgColor', color, (textbox, box, val) => {
         box.background = val;
@@ -239,6 +256,7 @@ const buttonConfigs = [
     { selector: '#charSpacingPanel button', property: 'charSpacing', getValue: el => parseInt(el.dataset.charspacing || el.textContent) },
     { selector: '#textAlignPanel button', property: 'textAlign', getValue: el => el.dataset.align },
     { selector: '#paddingPanel button', property: 'padding', getValue: el => parseInt(el.dataset.padding || el.textContent), customHandler: handlePaddingChange },
+    { selector: '#radiusPanel button', property: 'radius', getValue: el => parseInt(el.dataset.radius || el.textContent), customHandler: handleRadiusChange },
     { selector: '#offsetPanel button', property: 'offsetX', getValue: el => parseInt(el.dataset.offset || el.textContent), customHandler: handleOffsetChange }
 ];
 
@@ -275,6 +293,11 @@ function updateActiveStates() {
     document.querySelectorAll('#paddingPanel button').forEach(btn => {
         const padding = parseInt(btn.dataset.padding || btn.textContent);
         btn.classList.toggle('selected', padding === (box.padding || 0));
+    });
+    
+    document.querySelectorAll('#radiusPanel button').forEach(btn => {
+        const radius = parseInt(btn.dataset.radius || btn.textContent);
+        btn.classList.toggle('selected', radius === (box.radius || 0));
     });
     
     document.querySelectorAll('#offsetPanel button').forEach(btn => {
