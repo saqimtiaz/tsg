@@ -9,6 +9,7 @@ export const CANVAS_SIZES = {
 
 // Canvas background color
 export const CANVAS_BG_COLOR = '#aaaaaa';
+export const CANVAS_STROKE_COLOR = '#771616ff';
 
 /* ================= INTERACTION CONFIG ================= */
 export const INTERACTION_CONFIG = {

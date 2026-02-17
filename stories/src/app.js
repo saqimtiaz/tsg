@@ -5,7 +5,7 @@ import { addTextBox, exitTextMode, enterTextMode, renderTextBoxes } from "./ui/t
 import { toggleTextControls } from "./ui/textControls.js";
 import { initDB, saveProject, loadProject, clearProject, getSharedFiles } from "./data/db.js";
 import { exportImage, shareImage, canShareImage } from "./features/export.js";
-import { CANVAS_SIZES, INTERACTION_CONFIG, EXPORT_CONFIG, CANVAS_BG_COLOR } from "./config.js";
+import { CANVAS_SIZES, INTERACTION_CONFIG, EXPORT_CONFIG, CANVAS_BG_COLOR, CANVAS_STROKE_COLOR  } from "./config.js";
 import { pickImageFile, loadImageFromFile } from "./utils/utils.js";
 import { AppEvents, onAppEvent } from "./events.js";
 import { dom } from "./domCache.js";
@@ -201,9 +201,9 @@ function isImageUncovered(x, y, w, h) {
 
 function drawCanvasOutline() {
 	ctx.save();
-	ctx.strokeStyle = "white";
-	ctx.setLineDash([4, 4]);
-	ctx.lineWidth = 2;
+	ctx.strokeStyle = CANVAS_STROKE_COLOR;
+	ctx.setLineDash([8, 4]);
+	ctx.lineWidth = 10;
 	ctx.strokeRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
 	ctx.restore();
 }
@@ -217,10 +217,7 @@ function draw() {
 	// Fill canvas with background color
 	ctx.fillStyle = getCanvasBackgroundColor();
 	ctx.fillRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
-	
-	if (!drawImage()) {
-		drawCanvasOutline();
-	}
+	drawImage();
 	// Note: autosave is now triggered automatically by state notifications
 }
 

@@ -7,6 +7,9 @@
     Montserrat
 - Color picker UI
 	- including predefined custom colors
+	- https://github.com/sefianecho/alwan
+	- https://github.com/mdbassit/Coloris
+
 
 ## Future
 - refactor toasts and export.js and share them between both apps
