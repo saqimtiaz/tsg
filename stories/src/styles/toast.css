@@ -103,7 +103,7 @@
 @media (max-width: 600px) {
 	.toast-container {
 		width: calc(100vw - 32px);
-		bottom: 70px;
+		bottom: 50%;
 	}
 	
 	.toast {
