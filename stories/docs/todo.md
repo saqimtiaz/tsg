@@ -12,6 +12,11 @@
 ## Future
 - improve upgradeability of both apps, see section below.
 - only show text controls toggle when textbox selected?
+- zindex control: https://stackoverflow.com/questions/15032497/layering-canvas-objects-in-fabric-js
+- allowing adding arbitrary images and moving them https://fabric5.fabricjs.com/fabric-intro-part-1#images
+	- would likely necessitate an affordance to choose what to target for drag, like selecting a layer
+- replace image canvas, moving that same functionality inside fabric  https://github.com/fabricjs/fabric.js/issues/10814
+	- with the same two modes 
 - refactor toasts and export.js and share them between both apps
 - 
 ---
