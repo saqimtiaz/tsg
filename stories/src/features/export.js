@@ -234,8 +234,13 @@ function createExportCanvas(baseCanvas, CANVAS_WIDTH, CANVAS_HEIGHT) {
 	exportCtx.fillStyle = bgColor;
 	exportCtx.fillRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
 
-	// Draw base image on top of background
-	exportCtx.drawImage(baseCanvas, 0, 0);
+	// Draw image without dotted outline
+	const { img, scale, offsetX, offsetY } = state.image;
+	if (img) {
+		const imgW = img.width * scale;
+		const imgH = img.height * scale;
+		exportCtx.drawImage(img, offsetX, offsetY, imgW, imgH);
+	}
 	
 	// Draw fabric/text canvas on top at native resolution
 	const fabricCanvas = window.__fabricCanvas;

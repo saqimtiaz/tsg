@@ -41,7 +41,7 @@ export const TEXT_DEFAULTS = {
     COLOR: '#ffffff',
     BACKGROUND: '#1a1a1a',
     BACKGROUND_OPACITY: 0.6,
-    PADDING: 45,
+    PADDING: 50,
     RADIUS: 20,
     LINE_HEIGHT: 1.5,
     TEXT_ALIGN: 'left',
