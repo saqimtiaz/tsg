@@ -387,9 +387,10 @@ canvas.addEventListener("pointerdown", e=>{
 		isDragging=true; dragStart.x=e.clientX; dragStart.y=e.clientY;
 		holdTimer=setTimeout(()=>{
 			const p = pointers.get(e.pointerId);
-			// FIX 1: Check if still dragging or pinching before triggering long press
-			if(p && !p.moved && Math.hypot(p.totalDx,p.totalDy) < HOLD_MOVE_THRESHOLD && !isDragging && !pinching){
+			// Check if pointer hasn't moved much and no pinch is happening
+			if(p && !p.moved && Math.hypot(p.totalDx,p.totalDy) < HOLD_MOVE_THRESHOLD && pointers.size === 1){
 				pointers.clear();
+				isDragging = false;
 				if(insideBox){
 					pickFile((img,name)=>{photoImg=img; photoFilename=name; resetPhoto(); draw();});
 				}else{
