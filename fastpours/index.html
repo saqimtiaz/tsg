@@ -184,8 +184,8 @@ button:focus-visible {
 /* ================= CONFIG ================= */
 const CANVAS_WIDTH = 1440;
 const CANVAS_HEIGHT = 1920;
-const PADDING = 80;        // left, right, bottom
-const TOP_PADDING = 133;   // top
+const PADDING = 0;        // left, right, top
+const BOTTOM_PADDING = 130;   // bottom
 const HOLD_DELAY = 400;
 const HOLD_MOVE_THRESHOLD = 10;
 const SNAP_THRESHOLD = 8;
@@ -196,9 +196,9 @@ const KEY_NUDGE_FAST = 5;
 /* ================= DERIVED BOX ================= */
 const BOX = {
   x: PADDING,
-  y: TOP_PADDING,
+  y: PADDING,
   width: CANVAS_WIDTH - 2*PADDING,
-  height: CANVAS_HEIGHT - (TOP_PADDING + PADDING)
+  height: CANVAS_HEIGHT - (BOTTOM_PADDING + PADDING)
 };
 
 /* ================= STATE ================= */
